@@ -1,7 +1,7 @@
 <?php
 	/**
 	 * Addendum PHP Reflection Annotations
-	 * http://johno.jsmf.net/knowhow/addendum/
+	 * http://code.google.com/p/addendum/
 	 *
 	 * Copyright (C) 2006 Jan "johno Suchal <johno@jsmf.net>
 	
