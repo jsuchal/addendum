@@ -26,9 +26,9 @@
 	class TestOfAnnotations extends UnitTestCase {
 		public function testReflectionAnnotatedClass() {
 			$reflection = new ReflectionAnnotatedClass('Example');
-			$this->assertTrue($reflection->isAnnotatedWith('FirstAnnotation'));
-			$this->assertTrue($reflection->isAnnotatedWith('SecondAnnotation'));
-			$this->assertFalse($reflection->isAnnotatedWith('NonExistentAnnotation'));
+			$this->assertTrue($reflection->hasAnnotation('FirstAnnotation'));
+			$this->assertTrue($reflection->hasAnnotation('SecondAnnotation'));
+			$this->assertFalse($reflection->hasAnnotation('NonExistentAnnotation'));
 			$this->assertIsA($reflection->getAnnotation('FirstAnnotation'), 'FirstAnnotation');
 			$this->assertIsA($reflection->getAnnotation('SecondAnnotation'), 'SecondAnnotation');
 			$annotations = $reflection->getAnnotations();
@@ -59,8 +59,8 @@
 		
 		public function testReflectionAnnotatedMethod() {
 			$reflection = new ReflectionAnnotatedMethod('Example', 'exampleMethod');
-			$this->assertTrue($reflection->isAnnotatedWith('FirstAnnotation'));
-			$this->assertFalse($reflection->isAnnotatedWith('NonExistentAnnotation'));
+			$this->assertTrue($reflection->hasAnnotation('FirstAnnotation'));
+			$this->assertFalse($reflection->hasAnnotation('NonExistentAnnotation'));
 			$this->assertIsA($reflection->getAnnotation('FirstAnnotation'), 'FirstAnnotation');
 			$this->assertFalse($reflection->getAnnotation('NonExistentAnnotation'));
 			
@@ -73,8 +73,8 @@
 		
 		public function testReflectionAnnotatedProperty() {
 			$reflection = new ReflectionAnnotatedProperty('Example', 'exampleProperty');
-			$this->assertTrue($reflection->isAnnotatedWith('SecondAnnotation'));
-			$this->assertFalse($reflection->isAnnotatedWith('FirstAnnotation'));
+			$this->assertTrue($reflection->hasAnnotation('SecondAnnotation'));
+			$this->assertFalse($reflection->hasAnnotation('FirstAnnotation'));
 			$this->assertIsA($reflection->getAnnotation('SecondAnnotation'), 'SecondAnnotation');
 			$this->assertFalse($reflection->getAnnotation('NonExistentAnnotation'));
 			

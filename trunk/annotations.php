@@ -50,12 +50,12 @@
 			$this->annotations = $this->createParser()->parse($this->getDocComment());
 		}
 		
-		public function isAnnotatedWith($annotation) {
+		public function hasAnnotation($annotation) {
 			return isset($this->annotations[$annotation]);
 		}
 		
 		public function getAnnotation($annotation) {
-			if($this->isAnnotatedWith($annotation)) {
+			if($this->hasAnnotation($annotation)) {
 				return $this->annotations[$annotation];
 			}
 			return false;
@@ -131,12 +131,12 @@
 			$this->annotations = $this->createParser()->parse($this->getDocComment());
 		}
 		
-		public function isAnnotatedWith($annotation) {
+		public function hasAnnotation($annotation) {
 			return isset($this->annotations[$annotation]);
 		}
 		
 		public function getAnnotation($annotation) {
-			if($this->isAnnotatedWith($annotation)) {
+			if($this->hasAnnotation($annotation)) {
 				return $this->annotations[$annotation];
 			}
 			return false;
@@ -164,12 +164,12 @@
 			$this->annotations = $this->createParser()->parse($this->getDocComment());
 		}
 		
-		public function isAnnotatedWith($annotation) {
+		public function hasAnnotation($annotation) {
 			return isset($this->annotations[$annotation]);
 		}
 		
 		public function getAnnotation($annotation) {
-			if($this->isAnnotatedWith($annotation)) {
+			if($this->hasAnnotation($annotation)) {
 				return $this->annotations[$annotation];
 			}
 			return false;
