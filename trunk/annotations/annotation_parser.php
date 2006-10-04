@@ -83,14 +83,6 @@
 		}
 	}
 	
-	class AnnotationsBooleanParser {
-		public function parse($stream) {
-			if($stream->getFirstCharacters(4) == 'true') {
-				
-			}
-		}
-	}
-	
 	class AnnotationStringParser {
 		public function parse($stream) {			
 			$escapeCharacter = $stream->shift();
