@@ -47,7 +47,7 @@
 		
 		public function __construct($class) {
 			parent::__construct($class);
-			$this->annotations = $this->createParser()->parse($this->getDocComment());
+			$this->annotations = $this->createParser()->parse(AddendumCompatibility::getDocComment($this));
 		}
 		
 		public function hasAnnotation($annotation) {
@@ -128,7 +128,7 @@
 		
 		public function __construct($class, $name) {
 			parent::__construct($class, $name);
-			$this->annotations = $this->createParser()->parse($this->getDocComment());
+			$this->annotations = $this->createParser()->parse(AddendumCompatibility::getDocComment($this));
 		}
 		
 		public function hasAnnotation($annotation) {
@@ -161,7 +161,7 @@
 		
 		public function __construct($class, $name) {
 			parent::__construct($class, $name);
-			$this->annotations = $this->createParser()->parse($this->getDocComment());
+			$this->annotations = $this->createParser()->parse(AddendumCompatibility::getDocComment($this));
 		}
 		
 		public function hasAnnotation($annotation) {
@@ -186,6 +186,36 @@
 		
 		protected function createParser() {
 			return new AnnotationsParser();
+		}
+	}
+	
+	class AddendumCompatibility {
+		private static $rawMode;
+	
+		public static function getDocComment($reflection) {
+			if(self::checkRawDocCommentParsingNeeded()) {
+				$docComment = new DocComment();
+				return $docComment->get($reflection);
+			} else {
+				return $reflection->getDocComment();
+			}
+		}
+		
+		/** Raw mode test */
+		private static function checkRawDocCommentParsingNeeded() {
+			if(self::$rawMode === null) {
+				$reflection = new ReflectionClass('AddendumCompatibility');
+				$method = $reflection->getMethod('checkRawDocCommentParsingNeeded');
+				self::setRawMode($method->getDocComment() === false);
+			}
+			return self::$rawMode;
+		}
+		
+		public static function setRawMode($enabled = true) {
+			if($enabled) {
+				require_once(dirname(__FILE__).'/annotations/doc_comment.php');
+			}
+			self::$rawMode = $enabled;
 		}
 	}
 ?>
