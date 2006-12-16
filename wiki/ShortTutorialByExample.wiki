@@ -13,7 +13,8 @@ class Persistent extends Annotation {}
 
 == Annotating a class ==
 With defined annotation, you can annotate a different class/method/property with it.
-Annotating in Addendum is done by creating a doc block comments.
+Annotating in Addendum is done by creating a doc block comment with annotation syntax you
+might know from Java.
 {{{
 /** @Persistent */
 class Person {
