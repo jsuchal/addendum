@@ -1,18 +1,18 @@
-#summary Tutorial to Addendum annotations by example
+#summary Tutorial to Addendum annotations features by example
 #labels Featured
 
 = Simple example =
 
 == Creating your first annotation ==
-Annotations in Addendum are simple objects. To make a new `Persistent` annotation you just
-need to do:
+Annotations in Addendum are simple objects. To make a new `Persistent` annotation all you
+need to do is:
 {{{
 class Persistent extends Annotation {}
 }}}
 
 
 == Annotating a class ==
-With defined annotation, you can annotate a different class/method/property with it.
+With this defined annotation, you can annotate a different class/method/property with it.
 Annotating in Addendum is done by creating a doc block comment with annotation syntax you
 might know from Java.
 {{{
@@ -23,7 +23,7 @@ class Person {
 }}}
 
 == Accessing annotations ==
-Annotations of a class/method/properties are accessed through extended reflection API. A
+Annotations of a class are accessed through extended reflection API. A
 reflecting class can be created in two ways:
 {{{
 $reflection = new ReflectionAnnotatedClass('Person'); // by class name
@@ -37,8 +37,31 @@ To find out if a class is annotated by `Persistent` annotation use:
 $reflection->hasAnnotation('Persistent'); // true
 }}}
 
-To get annotation instance use:
+To access method/property annotations you can use `ReflectionAnnotatedMethod` and
+`ReflectionAnnotatedProperty`.
+
+= Valued annotations =
+
+== Single valued annotation ==
+Annotations can also hold a value. Let us create a `Table` annotation to demonstrate this
+feature.
+
 {{{
-// get annotation instance
-$annotation = $reflection->getAnnotation('Persistent'); // returns Persistent class instance
+class Table extends Annotation {}
+}}}
+
+Now let us annotate a class with a valued annotation.
+
+{{{
+/** @Table("people") */
+class Person {
+   // some code
+}
+}}}
+
+This value can be then accessed through reflection API
+
+{{{
+$reflection = new ReflectionAnnotatedClass('Person'); // by class name
+$reflection->getAnnnotation('Table')->value; // contains string "people"
 }}}
