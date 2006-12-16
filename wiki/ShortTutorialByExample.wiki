@@ -4,15 +4,16 @@
 = Simple example =
 
 == Creating your first annotation ==
-
+Annotations in Addendum are simple objects. To make a new `Persistent` annotation you just
+need to do:
 {{{
 class Persistent extends Annotation {}
 }}}
 
 
 == Annotating a class ==
-
-Annotating in Addendum is done by DocBlock comments. 
+With defined annotation, you can annotate a different class/method/property with it.
+Annotating in Addendum is done by creating a doc block comments.
 {{{
 /** @Persistent */
 class Person {
@@ -21,7 +22,8 @@ class Person {
 }}}
 
 == Accessing annotations ==
-You can access annotations of a class in two ways:
+Annotations of a class/method/properties are accessed through extended reflection API. A
+reflecting class can be created in two ways:
 {{{
 $reflection = new ReflectionAnnotatedClass('Person'); // by class name
 
@@ -29,9 +31,13 @@ $person = new Person();
 $reflection = new ReflectionAnnotatedClass($person); // by instance
 }}}
 
+To find out if a class is annotated by `Persistent` annotation use:
 {{{
 $reflection->hasAnnotation('Persistent'); // true
+}}}
 
+To get annotation instance use:
+{{{
 // get annotation instance
 $annotation = $reflection->getAnnotation('Persistent'); // returns Persistent class instance
 }}}
