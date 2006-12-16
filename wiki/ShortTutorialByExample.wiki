@@ -10,8 +10,9 @@ class Persistent extends Annotation {}
 }}}
 
 
-== Annotating a class/method/property ==
+== Annotating a class ==
 
+Annotating in Addendum is done by DocBlock comments. 
 {{{
 /** @Persistent */
 class Person {
@@ -20,11 +21,17 @@ class Person {
 }}}
 
 == Accessing annotations ==
+You can access annotations of a class in two ways:
+{{{
+$reflection = new ReflectionAnnotatedClass('Person'); // by class name
+
+$person = new Person();
+$reflection = new ReflectionAnnotatedClass($person); // by instance
+}}}
 
 {{{
-$reflection = new ReflectionAnnotatedClass('Person');
 $reflection->hasAnnotation('Persistent'); // true
 
-// get annotation
+// get annotation instance
 $annotation = $reflection->getAnnotation('Persistent'); // returns Persistent class instance
 }}}
