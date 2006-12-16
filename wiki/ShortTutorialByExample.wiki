@@ -1,8 +1,6 @@
 #summary Tutorial to Addendum annotations features by example
 #labels Featured
 
-= Simple example =
-
 == Creating your first annotation ==
 Annotations in Addendum are simple objects. To make a new `Persistent` annotation all you
 need to do is:
@@ -43,7 +41,7 @@ To access method/property annotations you can use `ReflectionAnnotatedMethod` an
 = Valued annotations =
 
 == Single valued annotation ==
-Annotations can also hold a value. Let us create a `Table` annotation to demonstrate this
+An annotation can also hold a value. Let us create a `Table` annotation to demonstrate this
 feature.
 
 {{{
@@ -64,4 +62,34 @@ This value can be then accessed through reflection API
 {{{
 $reflection = new ReflectionAnnotatedClass('Person'); // by class name
 $reflection->getAnnnotation('Table')->value; // contains string "people"
+}}}
+
+== Multi valued annotation ==
+
+Annotations can also hold multiple values. A multi valued annotation can be defined easily
+like this
+
+{{{
+class Secured extends Annotation {
+   public $role;
+   public $level;
+}
+}}}
+
+Multi valued annotations are used like this:
+
+{{{
+/** @Secured(role = "admin", level = 2);
+class ArticleEditor {
+ // some code
+}
+}}}
+
+To access these field just use extended reflection API.
+
+{{{
+$reflection = new ReflectionAnnotatedClass('Person'); // by class name
+$annotation = $reflection->getAnnnotation('Secured');
+$annotation->role; // contains string "admin"
+$annotation->level; // contains integer "2"
 }}}
