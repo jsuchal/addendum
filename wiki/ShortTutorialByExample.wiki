@@ -1,0 +1,30 @@
+#summary Tutorial to Addendum annotations by example
+#labels Featured
+
+= Simple example =
+
+== Creating your first annotation ==
+
+{{{
+class Persistent extends Annotation {}
+}}}
+
+
+== Annotating a class/method/property ==
+
+{{{
+/** @Persistent */
+class Person {
+   // some code
+}
+}}}
+
+== Accessing annotations ==
+
+{{{
+$reflection = new ReflectionAnnotatedClass('Person');
+$reflection->hasAnnotation('Persistent'); // true
+
+// get annotation
+$annotation = $reflection->getAnnotation('Persistent'); // returns Persistent class instance
+}}}
