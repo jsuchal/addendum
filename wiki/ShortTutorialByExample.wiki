@@ -80,7 +80,7 @@ Multi valued annotations are used like this:
 
 {{{
 /** @Secured(role = "admin", level = 2);
-class ArticleEditor {
+class Administration {
  // some code
 }
 }}}
@@ -88,7 +88,7 @@ class ArticleEditor {
 To access these field just use extended reflection API.
 
 {{{
-$reflection = new ReflectionAnnotatedClass('Person'); // by class name
+$reflection = new ReflectionAnnotatedClass('Administration'); // by class name
 $annotation = $reflection->getAnnnotation('Secured');
 $annotation->role; // contains string "admin"
 $annotation->level; // contains integer "2"
