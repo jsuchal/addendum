@@ -2,8 +2,11 @@
 
 
 || *Method* || *Description* ||
+
 || `hasAnnotation($annotationName)` || Returns true if target object is annotated with
-`$annotationName` ||
-|| `getAnnotation($annotationName)` || Returns annotation instance or `false` if
+$annotationName ||
+
+|| `getAnnotation($annotationName)` || Returns annotation instance or false if
 annotation does not exists on target object ||
+
 || `getAnnotations()` || Returns an array of all annotations on target object ||
