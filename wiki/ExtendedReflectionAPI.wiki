@@ -1,17 +1,8 @@
 #summary API Reference
 
+Extended Reflection API contains only three classes: `ReflectionAnnotatedClass`, `ReflectionAnnotatedMethod`, `ReflectionAnnotatedProperty'.
 
 || *Method* || *Description* ||
-|| `hasAnnotation($annotationName)` || Returns true if target object is annotated with
-$annotationName ||
-|| `getAnnotation($annotationName)` || Returns annotation instance or false if
-annotation does not exists on target object ||
+|| `hasAnnotation($annotationName)` || Returns true if target object is annotated with `$annotationName` ||
+|| `getAnnotation($annotationName)` || Returns annotation instance or `false` if annotation does not exists on target object ||
 || `getAnnotations()` || Returns an array of all annotations on target object ||
-
-
-|| *Method* || *Description* ||
-|| `hasAnnotation($annotationName)` || Returns true if target object is annotated with
-$annotationName ||
-|| getAnnotation($annotationName) || Returns annotation instance or false if annotation
-does not exists on target object ||
-|| getAnnotations() || Returns an array of all annotations on target object ||
