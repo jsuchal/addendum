@@ -111,6 +111,18 @@
 			$this->assertIdentical($annotation->ratio, 4.2);
 		}
 		
+		public function testHashedAnnotationWithTrue() {
+			$parser = new AnnotationParser();
+			$annotation = $parser->parse('@TestAnnotation(message = true)');
+			$this->assertIdentical($annotation->message, true);
+		}
+		
+		public function testHashedAnnotationWithFalse() {
+			$parser = new AnnotationParser();
+			$annotation = $parser->parse('@TestAnnotation(message = false)');
+			$this->assertIdentical($annotation->message, false);
+		}
+		
 		public function testIntegerValuedAnnotationWithSpaces() {
 			$parser = new AnnotationParser();
 			$annotation = $parser->parse('@TestAnnotation( 2  )');

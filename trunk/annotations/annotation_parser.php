@@ -135,23 +135,39 @@
 				if($char == '=') break;
 				$key .= $char;
 			}
-			$stream->skipSpaces();
-			$char = $stream->getFirstCharacter();
-			if(ctype_digit($char)) {
-				$parser = new AnnotationNumericParser();
-			} elseif($char == '"' || $char == '\'') {
-				$parser = new AnnotationStringParser();
-			} else {
-				$parser = new AnnotationDummyParser();
-			}
+			$parser = new AnnotationValueParser();
 			$value = $parser->parse($stream);
 			$result = array($key => $value);
-			$stream->skipSpaces();
 			if($stream->getFirstCharacter() == ',') {
 				$stream->forward();
 				$result = array_merge($result, $this->parse($stream));
 			}
 			return $result;
+		}
+	}
+	
+	class AnnotationValueParser {
+		public function parse($stream) {
+			$stream->skipSpaces();
+			if($stream->getFirstCharacters(4) == 'true') {
+				$stream->forward(4);
+				$value = true;
+			} elseif($stream->getFirstCharacters(5) == 'false') {
+				$stream->forward(5);
+				$value = false;
+			} else {			
+				$char = $stream->getFirstCharacter();
+				if(ctype_digit($char)) {
+					$parser = new AnnotationNumericParser();
+				} elseif($char == '"' || $char == '\'') {
+					$parser = new AnnotationStringParser();
+				} else {
+					$parser = new AnnotationDummyParser();
+				}			
+				$value = $parser->parse($stream);
+			}
+			$stream->skipSpaces();
+			return $value;
 		}
 	}
 	
