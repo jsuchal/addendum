@@ -135,6 +135,18 @@
 			$this->assertError("Error parsing annotation '@TestAnnotation(2' at position 18");
 		}
 		
+		public function testAnnotationWithZeroInString() {
+			$parser = new AnnotationParser();
+			$annotation = $parser->parse('@TestAnnotation(message = "test 203")');
+			$this->assertIdentical($annotation->message, 'test 203');
+		}
+		
+		public function testAnnotationWithZeroInNumber() {
+			$parser = new AnnotationParser();
+			$annotation = $parser->parse('@TestAnnotation(ratio = 0.15)');
+			$this->assertIdentical($annotation->ratio, 0.15);
+		}
+		
 		public function testAnnotationsParser() {
 			$parser = new AnnotationsParser();
 			$block = "

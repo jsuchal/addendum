@@ -87,7 +87,7 @@
 		public function parse($stream) {			
 			$escapeCharacter = $stream->shift();
 			$string = '';
-			while($char = $stream->getFirstCharacter()) {
+			while(($char = $stream->getFirstCharacter()) !== false) {
 				if($stream->getFirstCharacters(2) == '\\'.$escapeCharacter) {
 					$char = $escapeCharacter;
 					$stream->forward();
@@ -110,7 +110,7 @@
 				$sign = -1;
 				$stream->forward();
 			}
-			while($char = $stream->getFirstCharacter()) {
+			while(($char = $stream->getFirstCharacter()) !== false) {
 				if(ctype_digit($char) || $char == '.') {
 					$number .= $char;
 					$stream->forward();
