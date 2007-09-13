@@ -25,10 +25,10 @@
 	class Annotation {
 		public $value;
 		
-		public function __construct($parameters = array()) {
-			if(is_array($parameters)) {
+		public function __construct($data, $isComposite) {
+			if($isComposite) {
 				$reflection = new ReflectionClass($this);
-				foreach($parameters as $key => $value) {
+				foreach($data as $key => $value) {
 					if($reflection->hasProperty($key)) {
 						$this->$key = $value;
 					} else {
@@ -37,7 +37,7 @@
 					}
 				}
 			} else {
-				$this->value = $parameters;
+				$this->value = $data;
 			}
 		}
 	}

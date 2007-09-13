@@ -1,6 +1,6 @@
 <?php
-	require_once('simpletest/unit_tester.php');
-	require_once('simpletest/reporter.php');
+set_time_limit(5);
+	require_once('simpletest/autorun.php');
 	require_once('simpletest/mock_objects.php');
 	
 	require_once(dirname(__FILE__).'/../../annotations.php');
@@ -85,6 +85,12 @@
 			$this->assertEqual($annotation->ratio, 4.2);
 		}
 		
+		public function testSimpleHashedAnnotationWithNegativeValue() {
+			$parser = new AnnotationParser();
+			$annotation = $parser->parse('@TestAnnotation(ratio=-4.2)');
+			$this->assertEqual($annotation->ratio, -4.2);
+		}
+		
 		public function testMultiHashedAnnotation() {
 			$parser = new AnnotationParser();
 			$annotation = $parser->parse('@TestAnnotation(ratio=1,message="Wow!")');
@@ -145,6 +151,49 @@
 			$parser = new AnnotationParser();
 			$annotation = $parser->parse('@TestAnnotation(ratio = 0.15)');
 			$this->assertIdentical($annotation->ratio, 0.15);
+		}
+		
+		public function testAnnotationWithEmptyArray() {
+			$parser = new AnnotationParser();
+			$annotation = $parser->parse('@TestAnnotation({})');
+			$this->assertIdentical($annotation->value, array());
+		}
+		
+		public function testAnnotationWithArray() {
+			$parser = new AnnotationParser();
+			$annotation = $parser->parse('@TestAnnotation({1, 2, 3})');
+			$this->assertIdentical($annotation->value, array(1, 2, 3));
+		}
+		
+		public function testAnnotationWithNestedArray() {
+			$parser = new AnnotationParser();
+			$annotation = $parser->parse('@TestAnnotation({1, {2, 3}, 4})');
+			$this->assertIdentical($annotation->value, array(1, array(2, 3), 4));
+		}
+		
+		public function testHashedAnnotationWithArray() {
+			$parser = new AnnotationParser();
+			$annotation = $parser->parse('@TestAnnotation(ratio = {1, 2.5})');
+			$this->assertIdentical($annotation->ratio, array(1, 2.5));
+		}
+		
+		public function testAnnotationWithHashedArray() {
+			$parser = new AnnotationParser();
+			$annotation = $parser->parse('@TestAnnotation({key=5})');
+			$this->assertIdentical($annotation->value, array('key' => 5));
+		}
+		
+		public function testAnnotationWithBiggerHashedArray() {
+			$parser = new AnnotationParser();
+			$annotation = $parser->parse('@TestAnnotation({key=5, key2=4})');
+			$this->assertIdentical($annotation->value, array('key' => 5, 'key2' => 4));
+		}
+		
+		public function TODO_testAnnotationWithMixedArray() {
+			$parser = new AnnotationParser();
+			$annotation = $parser->parse('@TestAnnotation({key=1, 2, key2=3})');
+			$this->dump($annotation->value);
+			$this->assertIdentical($annotation->value, array('key' => 1, 2, 'key2' => 3));
 		}
 		
 		public function testAnnotationsParser() {
