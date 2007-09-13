@@ -1,6 +1,5 @@
 <?php
-	require_once('simpletest/unit_tester.php');
-	require_once('simpletest/reporter.php');
+	require_once('simpletest/autorun.php');
 	require_once('simpletest/mock_objects.php');
 	
 	require_once(dirname(__FILE__).'/../doc_comment.php');

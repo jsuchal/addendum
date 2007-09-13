@@ -48,8 +48,8 @@
 	
 	class AnnotationParameterParser {
 		public function parse($stream) {
-			$stream->forward();
 			$stream->skipSpaces();
+			$isComposite = false;
 			if($stream->getFirstCharacters(4) == 'true') {
 				$value = true;
 				$stream->forward(4);
@@ -63,28 +63,28 @@
 				} elseif($char == '"' || $char == '\'') {
 					$parser = new AnnotationStringParser();
 				} elseif(ctype_alpha($char)) {
+					$isComposite = true;
 					$parser = new AnnotationHashPairsParser();
+				} elseif($char == '{') {
+					$parser = new AnnotationArrayParser();
 				} else {
 					$parser = new AnnotationDummyParser();
 				}
 				$value = $parser->parse($stream);
 			}
-			$stream->skipSpaces();
-			if($stream->shift() != ')')  {
-				trigger_error("Error parsing annotation '".$stream->getString()."' at position ".$stream->getPosition());
-			}
-			return $value;
+			return array($value, $isComposite);
 		}
 	}
 	
 	class AnnotationDummyParser {
 		public function parse($stream) {
+			$stream->forward();
 			return false;
 		}
 	}
 	
 	class AnnotationStringParser {
-		public function parse($stream) {			
+		public function parse($stream) {
 			$escapeCharacter = $stream->shift();
 			$string = '';
 			while(($char = $stream->getFirstCharacter()) !== false) {
@@ -103,7 +103,7 @@
 	}
 	
 	class AnnotationNumericParser {
-		public function parse($stream) {			
+		public function parse($stream) {
 			$number = '';
 			$sign = 1;
 			if($stream->getFirstCharacter() == '-') {
@@ -121,7 +121,7 @@
 			if(is_numeric($number)) {
 				$number = (float) $number;
 				if(round($number) == $number) $number = (int) $number;
-				return $sign*$number;
+				return $sign * $number;
 			}
 		}
 	}
@@ -157,10 +157,12 @@
 				$value = false;
 			} else {			
 				$char = $stream->getFirstCharacter();
-				if(ctype_digit($char)) {
+				if(ctype_digit($char) || $char == '-') {
 					$parser = new AnnotationNumericParser();
 				} elseif($char == '"' || $char == '\'') {
 					$parser = new AnnotationStringParser();
+				} elseif($char == '{') {
+					$parser = new AnnotationArrayParser();
 				} else {
 					$parser = new AnnotationDummyParser();
 				}			
@@ -168,6 +170,32 @@
 			}
 			$stream->skipSpaces();
 			return $value;
+		}
+	}
+	
+	class AnnotationArrayParser {
+		public function parse($stream) {
+			$stream->forward();
+			$array = array();
+			while(1) {
+				$stream->skipSpaces();
+				$char = $stream->getFirstCharacter();
+				if($char == '}') {
+					$stream->forward();
+					return $array;
+				} elseif($char == ',') {
+					$stream->forward();
+				} else {
+					$parser = new AnnotationParameterParser();
+					list($value, $isComposite) = $parser->parse($stream);
+					if($isComposite) {
+						$array = array_merge($array, $value);
+					} else {
+						$array[] = $value;
+					}
+				}
+			}
+			return $array;
 		}
 	}
 	
@@ -191,15 +219,21 @@
 			}
 			$parameters = false;
 			if($c = $stream->getFirstCharacter() == '(') {
+				$stream->forward();
 				$parser = new AnnotationParameterParser();
 				$parameters = $parser->parse($stream);
+				$stream->skipSpaces();
+				if($stream->shift() != ')')  {
+					trigger_error("Error parsing annotation '".$stream->getString()."' at position ".$stream->getPosition());
+				}
 			}
 			return $this->createAnnotation($class, $parameters);
 		}
 		
 		protected function createAnnotation($class, $parameters) {
+			list($value, $isComposite) = $parameters;
 			$reflection = new ReflectionClass($class);
-			return $reflection->newInstance($parameters);
+			return $reflection->newInstance($value, $isComposite);
 		}
 	}
 	
