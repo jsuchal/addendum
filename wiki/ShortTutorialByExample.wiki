@@ -95,6 +95,8 @@ $annotation->level; // contains integer "2"
 }}}
  
 
+== Array values in annotations ==
+
 Annotations can even hold arrays of values using `{}` syntax. For example:
 
 
@@ -110,6 +112,7 @@ $reflection = new ReflectionAnnotatedClass('CMS');
 $annotation = $reflection->getAnnnotation('RolesAllowed');
 $annotation->value; // contains array('admin', 'web-editor')
 }}}
+ 
  
  
  
