@@ -101,7 +101,7 @@ Annotations can even hold arrays of values using `{}` syntax. For example:
 {{{
 class RolesAllowed extends Annotation {}
 
-/** @RolesAllowed({'admin', 'web-editor'});
+/** @RolesAllowed({'admin', 'web-editor'}); */
 class CMS {
  // some code
 }
@@ -110,4 +110,5 @@ $reflection = new ReflectionAnnotatedClass('CMS');
 $annotation = $reflection->getAnnnotation('RolesAllowed');
 $annotation->value; // contains array('admin', 'web-editor')
 }}}
+ 
  
