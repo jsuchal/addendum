@@ -79,7 +79,7 @@ class Secured extends Annotation {
 Multi valued annotations are used like this:
 
 {{{
-/** @Secured(role = "admin", level = 2);
+/** @Secured(role = "admin", level = 2); */
 class Administration {
  // some code
 }
@@ -110,5 +110,6 @@ $reflection = new ReflectionAnnotatedClass('CMS');
 $annotation = $reflection->getAnnnotation('RolesAllowed');
 $annotation->value; // contains array('admin', 'web-editor')
 }}}
+ 
  
  
