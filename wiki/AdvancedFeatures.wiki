@@ -24,6 +24,7 @@ Sometimes `@Target` meta-annotation does not provide enough power to check for a
 {{{
 class Route extends Annotation {
    protected function checkConstraints($target) {
+      parent::checkConstraints($target); // check for @Target contraints.
       if($this->value == /* something bad */) {
          // trigger some error
       } else {
