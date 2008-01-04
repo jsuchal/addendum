@@ -37,7 +37,7 @@
 				if($char == '@') {
 					$parser = new AnnotationParser();
 					$annotation = $parser->parseStream($stream);
-					$annotations[get_class($annotation)] = $annotation;
+					$annotations[$annotation[0]] = $annotation;
 				} else {
 					$stream->forward();
 				}
@@ -227,7 +227,12 @@
 					trigger_error("Error parsing annotation '".$stream->getString()."' at position ".$stream->getPosition());
 				}
 			}
-			return $this->createAnnotation($class, $parameters);
+			if(!$parameters[1]) {
+				$parameters = array('value' => $parameters[0]);
+			} else {
+				$parameters = $parameters[0];
+			}
+			return array($class, $parameters);
 		}
 		
 		protected function createAnnotation($class, $parameters) {

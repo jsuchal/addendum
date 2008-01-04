@@ -8,19 +8,14 @@
 	}
 	
 	class TestOfAnnotation extends UnitTestCase {
-		public function testConstructorFillsValueOnNonArrayParameters() {
-			$annotation = new TestingAnnotation(3.14);
-			$this->assertEqual($annotation->value, 3.14);
-		}
-		
 		public function testConstructorsFillsParameters() {
-			$annotation = new TestingAnnotation(array('optional' => 1, 'required' => 2));
+			$annotation = new TestingAnnotation(array('optional' => 1, 'required' => 2), $this);
 			$this->assertEqual($annotation->optional, 1);
 			$this->assertEqual($annotation->required, 2);
 		}
 		
 		public function testConstructorThrowsErrorOnInvalidParameter() {
-			$annotation = new TestingAnnotation(array('unknown' => 1));
+			$annotation = new TestingAnnotation(array('unknown' => 1), $this);
 			$this->assertError("Property 'unknown' not defined for annotation 'TestingAnnotation'");
 		}
 		
