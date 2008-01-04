@@ -63,6 +63,8 @@
 		}
 	}
 	
+	class Target extends Annotation {}
+	
 	class AnnotationsBuilder {
 		public function build($targetReflection) {
 			$parser = new AnnotationsParser;

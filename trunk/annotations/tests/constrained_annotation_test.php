@@ -2,8 +2,6 @@
 	require_once('simpletest/autorun.php');
 	require_once(dirname(__FILE__).'/../../annotations.php');
 
-	class Target extends Annotation {}
-
 	/** @Target("class") */
 	class ClassRestrictedAnnotation extends Annotation {}
 
