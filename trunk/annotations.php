@@ -25,20 +25,55 @@
 	class Annotation {
 		public $value;
 		
-		public function __construct($data, $isComposite) {
-			if($isComposite) {
-				$reflection = new ReflectionClass($this);
-				foreach($data as $key => $value) {
-					if($reflection->hasProperty($key)) {
-						$this->$key = $value;
-					} else {
-						$class = $reflection->getName();
-						trigger_error("Property '$key' not defined for annotation '$class'");
-					}
+		public function __construct($data, $target) {
+			$reflection = new ReflectionClass($this);
+			foreach($data as $key => $value) {
+				if($reflection->hasProperty($key)) {
+					$this->$key = $value;
+				} else {
+					$class = $reflection->getName();
+					trigger_error("Property '$key' not defined for annotation '$class'");
 				}
-			} else {
-				$this->value = $data;
 			}
+			$this->checkConstraints($target);
+		}
+		
+		protected function checkConstraints($target) {
+			$reflection = new ReflectionAnnotatedClass($this);
+			if($reflection->hasAnnotation('Target')) {
+				$value = $reflection->getAnnotation('Target')->value;
+				$values = is_array($value) ? $value : array($value);
+				foreach($values as $value) {
+					if($value == 'class' && $target instanceof ReflectionClass) return true;
+					if($value == 'method' && $target instanceof ReflectionMethod) return true;
+					if($value == 'property' && $target instanceof ReflectionProperty) return true;
+				}
+				trigger_error("Annotation '".get_class($this)."' not allowed on ".$this->createName($target), E_USER_ERROR);
+			}
+		}
+		
+		private function createName($target) {
+			if($target instanceof ReflectionMethod) {
+				return $target->getDeclaringClass()->getName().'::'.$target->getName();
+			} elseif($target instanceof ReflectionProperty) {
+				return $target->getDeclaringClass()->getName().'::$'.$target->getName();
+			} else {
+				return $target->getName();
+			}
+		}
+	}
+	
+	class AnnotationsBuilder {
+		public function build($targetReflection) {
+			$parser = new AnnotationsParser;
+			$data = $parser->parse(AddendumCompatibility::getDocComment($targetReflection));
+			$annotations = array();
+			foreach($data as $raw) {
+				list($class, $parameters) = $raw;
+				$annotationReflection = new ReflectionClass($class);
+				$annotations[$class] = $annotationReflection->newInstance($parameters, $targetReflection);
+			}
+			return $annotations;
 		}
 	}
 	
@@ -47,7 +82,7 @@
 		
 		public function __construct($class) {
 			parent::__construct($class);
-			$this->annotations = $this->createParser()->parse(AddendumCompatibility::getDocComment($this));
+			$this->annotations = $this->createAnnotationBuilder()->build($this);
 		}
 		
 		public function hasAnnotation($annotation) {
@@ -55,10 +90,7 @@
 		}
 		
 		public function getAnnotation($annotation) {
-			if($this->hasAnnotation($annotation)) {
-				return $this->annotations[$annotation];
-			}
-			return false;
+			return $this->hasAnnotation($annotation) ? $this->annotations[$annotation] : false;
 		}
 		
 		public function getAnnotations() {
@@ -106,8 +138,8 @@
 			return $this->createReflectionAnnotatedClass($class);
 		}
 		
-		protected function createParser() {
-			return new AnnotationsParser();
+		protected function createAnnotationBuilder() {
+			return new AnnotationsBuilder();
 		}
 		
 		private function createReflectionAnnotatedClass($class) {
@@ -128,7 +160,7 @@
 		
 		public function __construct($class, $name) {
 			parent::__construct($class, $name);
-			$this->annotations = $this->createParser()->parse(AddendumCompatibility::getDocComment($this));
+			$this->annotations = $this->createAnnotationBuilder()->build($this);
 		}
 		
 		public function hasAnnotation($annotation) {
@@ -136,10 +168,7 @@
 		}
 		
 		public function getAnnotation($annotation) {
-			if($this->hasAnnotation($annotation)) {
-				return $this->annotations[$annotation];
-			}
-			return false;
+			return ($this->hasAnnotation($annotation)) ? $this->annotations[$annotation] : false;
 		}
 		
 		public function getAnnotations() {
@@ -151,8 +180,8 @@
 			return new ReflectionAnnotatedClass($class->getName());
 		}
 		
-		protected function createParser() {
-			return new AnnotationsParser();
+		protected function createAnnotationBuilder() {
+			return new AnnotationsBuilder();
 		}
 	}
 	
@@ -161,7 +190,7 @@
 		
 		public function __construct($class, $name) {
 			parent::__construct($class, $name);
-			$this->annotations = $this->createParser()->parse(AddendumCompatibility::getDocComment($this));
+			$this->annotations = $this->createAnnotationBuilder()->build($this);
 		}
 		
 		public function hasAnnotation($annotation) {
@@ -169,10 +198,7 @@
 		}
 		
 		public function getAnnotation($annotation) {
-			if($this->hasAnnotation($annotation)) {
-				return $this->annotations[$annotation];
-			}
-			return false;
+			return ($this->hasAnnotation($annotation)) ? $this->annotations[$annotation] : false;
 		}
 		
 		public function getAnnotations() {
@@ -184,8 +210,8 @@
 			return new ReflectionAnnotatedClass($class->getName());
 		}
 		
-		protected function createParser() {
-			return new AnnotationsParser();
+		protected function createAnnotationBuilder() {
+			return new AnnotationsBuilder();
 		}
 	}
 	
