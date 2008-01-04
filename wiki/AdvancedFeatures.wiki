@@ -1,0 +1,35 @@
+#summary Advanced features
+#labels Featured
+
+= Advanced features =
+
+== Constrained annotations ==
+
+=== Meta-annotation `@Target` ===
+
+Using `@Target` meta-annotation you can easily annotate annotations (yes, it's kind of scary!) to prevent annotations to be misplaced.
+
+For example you might want a `@Route` annotation that can be only used to annotate methods.  It's easy:
+
+{{{
+/** @Target("method") */
+class Route extends Annotation {}
+}}}
+
+
+=== Implementing custom constraints ===
+
+Sometimes `@Target` meta-annotation does not provide enough power to check for additional constraints. You can override Annotation::checkConstraints method to add additional rules for validation, etc.
+
+{{{
+class Route extends Annotation {
+   protected function checkConstraints($target) {
+      if($this->value == /* something bad */) {
+         // trigger some error
+      } else {
+         // do something else
+      }
+      // variable $target holds reflection class of annotation target (class, method, property)
+   }
+}
+}}}
