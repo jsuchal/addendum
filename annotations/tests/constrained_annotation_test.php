@@ -16,7 +16,6 @@
 	/** @Target({"class", "property"}) */
 	class ClassOrPropertyRestrictedAnnotation extends Annotation {}
 	
-	
 
 	class BadlyAnnotatedClass {
 		/** @ClassRestrictedAnnotation */
