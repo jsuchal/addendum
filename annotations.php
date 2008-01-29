@@ -107,9 +107,9 @@
 			return $this->createReflectionAnnotatedMethod(parent::getMethod($name));
 		}
 		
-		public function getMethods() {
+		public function getMethods($filter = null) {
 			$result = array();
-			foreach(parent::getMethods() as $method) {
+			foreach(parent::getMethods($filter) as $method) {
 				$result[] = $this->createReflectionAnnotatedMethod($method);
 			}
 			return $result;
@@ -119,9 +119,9 @@
 			return $this->createReflectionAnnotatedProperty(parent::getProperty($name));
 		}
 		
-		public function getProperties() {
+		public function getProperties($filter = null) {
 			$result = array();
-			foreach(parent::getProperties() as $property) {
+			foreach(parent::getProperties($filter) as $property) {
 				$result[] = $this->createReflectionAnnotatedProperty($property);
 			}
 			return $result;
