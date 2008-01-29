@@ -12,11 +12,15 @@
 		/** @SecondAnnotation */
 		private $exampleProperty;
 		
+		public $publicOne;
+		
 		public function __construct() {}
 		
 		/** @FirstAnnotation */
 		public function exampleMethod() {
 		}
+		
+		private function justPrivate() {}
 	}
 	
 	class FirstAnnotation extends Annotation {}
@@ -82,6 +86,20 @@
 			$this->assertIsA($annotations[0], 'SecondAnnotation');
 			
 			$this->assertIsA($reflection->getDeclaringClass(), 'ReflectionAnnotatedClass');
+		}
+		
+		public function testReflectionClassCanFilterMethodsByAccess() {
+			$reflection = new ReflectionAnnotatedClass('Example');
+			$privateMethods = $reflection->getMethods(ReflectionMethod::IS_PRIVATE);
+			$this->assertEqual(count($privateMethods), 1);
+			$this->assertEqual($privateMethods[0]->getName(), 'justPrivate');
+		}
+		
+		public function testReflectionClassCanFilterPropertiesByAccess() {
+			$reflection = new ReflectionAnnotatedClass('Example');
+			$privateProperties = $reflection->getProperties(ReflectionProperty::IS_PUBLIC);
+			$this->assertEqual(count($privateProperties), 1);
+			$this->assertEqual($privateProperties[0]->getName(), 'publicOne');
 		}
 	}
 ?>
