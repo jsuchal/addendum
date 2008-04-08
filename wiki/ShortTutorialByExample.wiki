@@ -1,6 +1,8 @@
 #summary Tutorial to Addendum annotations features by example
 #labels Featured
 
+= Addendum annotation basics =
+
 == Creating your first annotation ==
 Annotations in Addendum are simple objects. To make a new `Persistent` annotation all you
 need to do is:
@@ -113,6 +115,7 @@ $annotation = $reflection->getAnnnotation('RolesAllowed');
 $annotation->value; // contains array('admin', 'web-editor')
 }}}
  
- 
+= And there is more! =
+If your head is not spinning now look at more AdvancedFeatures.
  
  
