@@ -13,6 +13,7 @@ You can place *multiple instances of same class annotations* on one target.
  @Title(value='Wilkommen', lang='de')
  @Title(value='Vitajte', lang='sk')
  @Snippet
+ */
 class WelcomeScreen {}
 }}}
 
