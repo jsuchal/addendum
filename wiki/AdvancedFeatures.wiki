@@ -3,6 +3,27 @@
 
 = Advanced features =
 
+== Multiple instances of annotations ==
+
+You can place *multiple instances of same class annotations* on one target.
+
+{{{
+/** 
+ @Title(value='Welcome', lang='en')
+ @Title(value='Wilkommen', lang='de')
+ @Title(value='Vitajte', lang='sk')
+ @Snippet
+class WelcomeScreen {}
+}}}
+
+And then access them using 
+{{{
+$reflection = new ReflectionAnnotatedClass('WelcomeScreen');
+$annotations = $reflection->getAllAnnotations(); // array of all 4 annotations
+$just_titles = $reflection->getAllAnnotations('Title'); // array those 3 Title annotations
+}}}
+
+
 == Constrained annotations ==
 
 === Meta-annotation `@Target` ===
@@ -24,7 +45,6 @@ Sometimes `@Target` meta-annotation does not provide enough power to check for a
 {{{
 class Route extends Annotation {
    protected function checkConstraints($target) {
-      parent::checkConstraints($target); // check for @Target contraints.
       if($this->value == /* something bad */) {
          // trigger some error
       } else {
