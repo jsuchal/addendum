@@ -124,7 +124,7 @@ Of course you can also use associative arrays.
 Or even mix them and use nested arrays any way you like!
 
 {{{
-@Annotation({key1 = 1, 2, 3, {4, 5}})
+@Annotation({key1 = 1, 2, 3, {4, key = 5}})
 }}}
 
 = And there is more! =
