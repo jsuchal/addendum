@@ -82,7 +82,6 @@
 			$finder = new MockDocComment();
 			$finder->expectNever('parse');
 			$this->assertEqual($finder->get($reflection), false);
-			
 		}
 	}
 ?>

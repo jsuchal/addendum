@@ -20,284 +20,305 @@
 	 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 	**/
 	
-	class AnnotationsParser {
-		private static $cache = array();
-	
-		public function parse($string) {
-			if(!isset(self::$cache[$string])) {
-				self::$cache[$string] = $this->doParsing($string);
-			}
-			return self::$cache[$string];
+	class CompositeMatcher {
+		protected $matchers = array();
+		private $wasConstructed = false;
+
+		public function add($matcher) {
+			$this->matchers[] = $matcher;
 		}
-		
-		protected function doParsing($string) {
-			$stream = new StringStream($string);
-			$annotations = array();
-			while($char = $stream->getFirstCharacter()) {
-				if($char == '@') {
-					$parser = new AnnotationParser();
-					$annotation = $parser->parseStream($stream);
-					$annotations[$annotation[0]] = $annotation;
-				} else {
-					$stream->forward();
+
+		public function matches($string, &$value) {
+			if(!$this->wasConstructed) {
+				$this->build();
+				$this->wasConstructed = true;
+			}
+			return $this->match($string, $value);
+		}
+
+		protected function build() {}
+	}
+
+	class ParallelMatcher extends CompositeMatcher {
+		protected function match($string, &$value) {
+			$maxLength = false;
+			$result = null;
+			foreach($this->matchers as $matcher) {
+				$length = $matcher->matches($string, $subvalue);
+				if($maxLength === false || $length > $maxLength) {
+					$maxLength = $length;
+					$result = $subvalue;
 				}
 			}
-			return $annotations;
+			$value = $this->process($result);
+			return $maxLength;
 		}
-	}
-	
-	class AnnotationParameterParser {
-		public function parse($stream) {
-			$stream->skipSpaces();
-			$isComposite = false;
-			if($stream->getFirstCharacters(4) == 'true') {
-				$value = true;
-				$stream->forward(4);
-			} elseif($stream->getFirstCharacters(5) == 'false') {
-				$value = false;
-				$stream->forward(5);
-			} else {
-				$char = $stream->getFirstCharacter();
-				if(ctype_digit($char) || $char == '-') {
-					$parser = new AnnotationNumericParser();
-				} elseif($char == '"' || $char == '\'') {
-					$parser = new AnnotationStringParser();
-				} elseif(ctype_alpha($char)) {
-					$isComposite = true;
-					$parser = new AnnotationHashPairsParser();
-				} elseif($char == '{') {
-					$parser = new AnnotationArrayParser();
-				} else {
-					$parser = new AnnotationDummyParser();
-				}
-				$value = $parser->parse($stream);
-			}
-			return array($value, $isComposite);
-		}
-	}
-	
-	class AnnotationDummyParser {
-		public function parse($stream) {
-			$stream->forward();
-			return false;
-		}
-	}
-	
-	class AnnotationStringParser {
-		public function parse($stream) {
-			$escapeCharacter = $stream->shift();
-			$string = '';
-			while(($char = $stream->getFirstCharacter()) !== false) {
-				if($stream->getFirstCharacters(2) == '\\'.$escapeCharacter) {
-					$char = $escapeCharacter;
-					$stream->forward();
-				} elseif($char == $escapeCharacter) {
-					$stream->forward();
-					break;
-				}
-				$string .= $char;
-				$stream->forward();
-			}
-			return $string;
-		}
-	}
-	
-	class AnnotationNumericParser {
-		public function parse($stream) {
-			$number = '';
-			$sign = 1;
-			if($stream->getFirstCharacter() == '-') {
-				$sign = -1;
-				$stream->forward();
-			}
-			while(($char = $stream->getFirstCharacter()) !== false) {
-				if(ctype_digit($char) || $char == '.') {
-					$number .= $char;
-					$stream->forward();
-				} else {
-					break;
-				}
-			}
-			if(is_numeric($number)) {
-				$number = (float) $number;
-				if(round($number) == $number) $number = (int) $number;
-				return $sign * $number;
-			}
-		}
-	}
-	
-	class AnnotationHashPairsParser {
-		public function parse($stream) {
-			$stream->skipSpaces();
-			$key = '';
-			while($char = $stream->shift()) {
-				if($char == ' ') continue;
-				if($char == '=') break;
-				$key .= $char;
-			}
-			$parser = new AnnotationValueParser();
-			$value = $parser->parse($stream);
-			$result = array($key => $value);
-			if($stream->getFirstCharacter() == ',') {
-				$stream->forward();
-				$result = array_merge($result, $this->parse($stream));
-			}
-			return $result;
-		}
-	}
-	
-	class AnnotationValueParser {
-		public function parse($stream) {
-			$stream->skipSpaces();
-			if($stream->getFirstCharacters(4) == 'true') {
-				$stream->forward(4);
-				$value = true;
-			} elseif($stream->getFirstCharacters(5) == 'false') {
-				$stream->forward(5);
-				$value = false;
-			} else {			
-				$char = $stream->getFirstCharacter();
-				if(ctype_digit($char) || $char == '-') {
-					$parser = new AnnotationNumericParser();
-				} elseif($char == '"' || $char == '\'') {
-					$parser = new AnnotationStringParser();
-				} elseif($char == '{') {
-					$parser = new AnnotationArrayParser();
-				} else {
-					$parser = new AnnotationDummyParser();
-				}			
-				$value = $parser->parse($stream);
-			}
-			$stream->skipSpaces();
+
+		protected function process($value) {
 			return $value;
 		}
 	}
-	
-	class AnnotationArrayParser {
-		public function parse($stream) {
-			$stream->forward();
-			$array = array();
-			while(1) {
-				$stream->skipSpaces();
-				$char = $stream->getFirstCharacter();
-				if($char == '}') {
-					$stream->forward();
-					return $array;
-				} elseif($char == ',') {
-					$stream->forward();
-				} else {
-					$parser = new AnnotationParameterParser();
-					list($value, $isComposite) = $parser->parse($stream);
-					if($isComposite) {
-						$array = array_merge($array, $value);
-					} else {
-						$array[] = $value;
-					}
-				}
+
+	class SerialMatcher extends CompositeMatcher {
+		protected function match($string, &$value) {
+			$results = array();
+			$total_length = 0;
+			foreach($this->matchers as $matcher) {
+				if(($length = $matcher->matches($string, $result)) === false) return false;
+				$total_length += $length;
+				$results[] = $result;
+				$string = substr($string, $length);
 			}
-			return $array;
+			$value = $this->process($results);
+			return $total_length;
+		}
+
+		protected function process($results) {
+			return implode('', $results);
+		}
+	}
+
+	class SimpleSerialMatcher extends SerialMatcher {
+		private $return_part_index;
+
+		public function __construct($return_part_index = 0) {
+			$this->return_part_index = $return_part_index;
+		}
+
+		public function process($parts) {
+			return $parts[$this->return_part_index];
+		}
+	}
+
+	class RegexMatcher {
+		private $regex;
+
+		public function __construct($regex) {
+			$this->regex = $regex;
+		}
+
+		public function matches($string, &$value) {
+			if(preg_match("/^{$this->regex}/", $string, $matches)) {
+				$value = $this->process($matches);
+				return strlen($matches[0]);
+			}
+			$value = false;
+			return false;
+		}
+
+		protected function process($matches) {
+			return $matches[0];
 		}
 	}
 	
-	class AnnotationParser {
-		public function parse($string) {
-			$stream = new StringStream($string);
-			return $this->parseStream($stream);
-		}
-	
-		public function parseStream($stream) {
-			$stream->shift();
-			$class = '';
-			while(!$stream->isEmpty()) {
-				$char = $stream->getFirstCharacter();
-				if(ctype_alnum($char)) {
-					$class .= $char;
-					$stream->forward();
-				} else {
-					break;
+	class AnnotationsMatcher {
+		public function matches($string, &$annotations) {
+			$annotations = array();
+			$annotation_matcher = new AnnotationMatcher;
+			while(true) {
+				if(preg_match('/\s(?=@)/', $string, $matches, PREG_OFFSET_CAPTURE)) {
+					$offset = $matches[0][1] + 1;
+					$string = substr($string, $offset);
+				}  else {
+					return; // no more annotations
+				}
+				if(($length = $annotation_matcher->matches($string, $data)) !== false) {
+					$string = substr($string, $length);
+					list($name, $params) = $data;
+					$annotations[$name][] = $params;
 				}
 			}
-			$parameters = false;
-			if($c = $stream->getFirstCharacter() == '(') {
-				$stream->forward();
-				$parser = new AnnotationParameterParser();
-				$parameters = $parser->parse($stream);
-				$stream->skipSpaces();
-				if($stream->shift() != ')')  {
-					trigger_error("Error parsing annotation '".$stream->getString()."' at position ".$stream->getPosition());
-				}
-			}
-			if(!$parameters[1]) {
-				$parameters = array('value' => $parameters[0]);
-			} else {
-				$parameters = $parameters[0];
-			}
-			return array($class, $parameters);
-		}
-		
-		protected function createAnnotation($class, $parameters) {
-			list($value, $isComposite) = $parameters;
-			$reflection = new ReflectionClass($class);
-			return $reflection->newInstance($value, $isComposite);
 		}
 	}
 	
-	class StringStream {
-		public $string;
-		public $length;
-		public $position;
-		
-		public function __construct($string) {
-			$this->string = $string;
-			$this->length = strlen($string);
-			$this->position = 0;
+	class AnnotationMatcher extends SerialMatcher {
+		protected function build() {
+			$this->add(new RegexMatcher('@'));
+			$this->add(new RegexMatcher('[A-Z][a-zA-Z0-9_]+'));
+			$this->add(new AnnotationParametersMatcher);
 		}
-		
-		public function isEmpty() {
-			return !$this->hasAtLeast(1);
+
+		protected function process($results) {
+			return array($results[1], $results[2]);
 		}
-		
-		public function shift() {
-			$char = $this->getFirstCharacter();
-			$this->position++;
-			return $char;
+	}
+
+	class ConstantMatcher extends RegexMatcher {
+		private $constant;
+
+		public function __construct($regex, $constant) {
+			parent::__construct($regex);
+			$this->constant = $constant;
 		}
-		
-		public function forward($steps = 1) {
-			$this->position += $steps;
+
+		protected function process() {
+			return $this->constant;
 		}
-		
-		public function getFirstCharacters($length) {
-			if($this->hasAtLeast($length)) {
-				return substr($this->string, $this->position, $length);
-			}
-			return false;
+	}
+
+	class AnnotationParametersMatcher extends ParallelMatcher {
+		protected function build() {
+			$this->add(new ConstantMatcher('', array()));
+			$this->add(new ConstantMatcher('\(\)', array()));
+			$params_matcher = new SimpleSerialMatcher(1);
+			$params_matcher->add(new RegexMatcher('\('));
+			$params_matcher->add(new AnnotationValuesMatcher);
+			$params_matcher->add(new RegexMatcher('\)'));
+			$this->add($params_matcher);
 		}
-		
-		public function getFirstCharacter() {
-			if($this->hasAtLeast(1)) {
-				return $this->string{$this->position};
-			}
-			return false;
+	}
+
+	class AnnotationValuesMatcher extends ParallelMatcher {
+		protected function build() {
+			$this->add(new AnnotationTopValueMatcher);
+			$this->add(new AnnotationHashMatcher);
 		}
-		
-		public function skipSpaces() {
-			while($char = $this->getFirstCharacter()) {
-				if($char != ' ') break;
-				$this->forward();
-			}
+	}
+	
+	class AnnotationTopValueMatcher extends AnnotationValueMatcher {
+		protected function process($value) {
+			return array('value' => $value);
 		}
-		
-		public function getString() {
-			return $this->string;
+	}
+
+	class AnnotationValueMatcher extends ParallelMatcher {
+		protected function build() {
+			$this->add(new ConstantMatcher('true', true));
+			$this->add(new ConstantMatcher('false', false));
+			$this->add(new ConstantMatcher('TRUE', true));
+			$this->add(new ConstantMatcher('FALSE', false));
+			$this->add(new AnnotationStringMatcher);
+			$this->add(new AnnotationNumberMatcher);
+			$this->add(new AnnotationArrayMatcher);
 		}
-		
-		public function getPosition() {
-			return $this->position;
+	}
+
+	class AnnotationKeyMatcher extends ParallelMatcher {
+		protected function build() {
+			$this->add(new RegexMatcher('[a-zA-Z0-9_]+'));
+			$this->add(new AnnotationStringMatcher);
 		}
-		
-		private function hasAtLeast($characters) {
-			return ($this->position + $characters <= $this->length);
+	}
+
+	class AnnotationPairMatcher extends SerialMatcher {
+		protected function build() {
+			$this->add(new AnnotationKeyMatcher);
+			$this->add(new RegexMatcher('='));
+			$this->add(new AnnotationValueMatcher);
+		}
+
+		protected function process($parts) {
+			return array($parts[0] => $parts[2]);
+		}
+	}
+
+	class AnnotationHashMatcher extends ParallelMatcher {
+		protected function build() {
+			$this->add(new AnnotationPairMatcher);
+			$this->add(new AnnotationMorePairsMatcher);
+		}
+	}
+
+	class AnnotationMorePairsMatcher extends SerialMatcher {
+		protected function build() {
+			$this->add(new AnnotationPairMatcher);
+			$this->add(new RegexMatcher('\s*,\s*'));
+			$this->add(new AnnotationHashMatcher);
+		}
+
+		protected function match($string, &$value) {
+			$result = parent::match($string, $value);
+			return $result;
+		}
+
+		public function process($parts) {
+			return array_merge($parts[0], $parts[2]);
+		}
+	}
+
+	class AnnotationArrayMatcher extends ParallelMatcher {
+		protected function build() {
+			$this->add(new ConstantMatcher('{}', array()));
+			$values_matcher = new SimpleSerialMatcher(1);
+			$values_matcher->add(new RegexMatcher('{'));
+			$values_matcher->add(new AnnotationArrayValuesMatcher);
+			$values_matcher->add(new RegexMatcher('}'));
+			$this->add($values_matcher);
+		}
+	}
+
+	class AnnotationArrayValuesMatcher extends ParallelMatcher {
+		protected function build() {
+			$this->add(new AnnotationArrayValueMatcher);
+			$this->add(new AnnotationMoreValuesMatcher);
+		}
+	}
+
+	class AnnotationMoreValuesMatcher extends SimpleSerialMatcher {
+		protected function build() {
+			$this->add(new AnnotationArrayValueMatcher);
+			$this->add(new RegexMatcher('\s*,\s*'));
+			$this->add(new AnnotationArrayValuesMatcher);
+		}
+
+		protected function match($string, &$value) {
+			$result = parent::match($string, $value);
+			return $result;
+		}
+
+		public function process($parts) {
+			return array_merge($parts[0], $parts[2]);
+		}
+	}
+
+	class AnnotationArrayValueMatcher extends ParallelMatcher {
+		protected function build() {
+			$this->add(new AnnotationValueInArrayMatcher);
+			$this->add(new AnnotationPairMatcher);
+		}
+	}
+
+	class AnnotationValueInArrayMatcher extends AnnotationValueMatcher {
+		public function process($value) {
+			return array($value);
+		}
+	}
+
+	class AnnotationStringMatcher extends ParallelMatcher {
+		protected function build() {
+			$this->add(new AnnotationSingleQuotedStringMatcher);
+			$this->add(new AnnotationDoubleQuotedStringMatcher);
+		}
+	}
+
+	class AnnotationNumberMatcher extends RegexMatcher {
+		public function __construct() {
+			parent::__construct("-?[0-9]*\.?[0-9]*");
+		}
+
+		protected function process($matches) {
+			$isFloat = strpos($matches[0], '.') !== false;
+			return $isFloat ? (float) $matches[0] : (int) $matches[0];
+		}
+	}
+
+	class AnnotationSingleQuotedStringMatcher extends RegexMatcher {
+		public function __construct() {
+			parent::__construct("'([^']*)'");
+		}
+
+		protected function process($matches) {
+			return $matches[1];
+		}
+	}
+
+	class AnnotationDoubleQuotedStringMatcher extends RegexMatcher {
+		public function __construct() {
+			parent::__construct('"([^"]*)"');
+		}
+
+		protected function process($matches) {
+			return $matches[1];
 		}
 	}
 ?>

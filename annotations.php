@@ -35,10 +35,10 @@
 					trigger_error("Property '$key' not defined for annotation '$class'");
 				}
 			}
-			$this->checkConstraints($target);
+			$this->checkAllConstraints($target);
 		}
 		
-		protected function checkConstraints($target) {
+		final protected function checkAllConstraints($target) {
 			$reflection = new ReflectionAnnotatedClass($this);
 			if($reflection->hasAnnotation('Target')) {
 				$value = $reflection->getAnnotation('Target')->value;
@@ -50,7 +50,10 @@
 				}
 				trigger_error("Annotation '".get_class($this)."' not allowed on ".$this->createName($target), E_USER_ERROR);
 			}
+			$this->checkConstraints($target);
 		}
+		
+		protected function checkConstraints() {}
 		
 		private function createName($target) {
 			if($target instanceof ReflectionMethod) {
@@ -67,13 +70,16 @@
 	
 	class AnnotationsBuilder {
 		public function build($targetReflection) {
-			$parser = new AnnotationsParser;
-			$data = $parser->parse(AddendumCompatibility::getDocComment($targetReflection));
+			$parser = new AnnotationsMatcher;
+			$parser->matches(Addendum::getDocComment($targetReflection), $data);
 			$annotations = array();
-			foreach($data as $raw) {
-				list($class, $parameters) = $raw;
-				$annotationReflection = new ReflectionClass($class);
-				$annotations[$class] = $annotationReflection->newInstance($parameters, $targetReflection);
+			foreach($data as $class => $parameters) {
+				if(!Addendum::ignores($class)) {
+					foreach($parameters as $params) {
+						$annotationReflection = new ReflectionClass($class);
+						$annotations[$class][] = $annotationReflection->newInstance($params, $targetReflection);
+					}
+				}
 			}
 			return $annotations;
 		}
@@ -92,11 +98,25 @@
 		}
 		
 		public function getAnnotation($annotation) {
-			return $this->hasAnnotation($annotation) ? $this->annotations[$annotation] : false;
+			return $this->hasAnnotation($annotation) ? end($this->annotations[$annotation]) : false;
 		}
 		
 		public function getAnnotations() {
-			return array_values($this->annotations);
+			$result = array();
+			foreach($this->annotations as $instances) {
+				$result[] = end($instances);
+			}
+			return $result;
+		}
+		
+		public function getAllAnnotations($restriction = false) {
+			$result = array();
+			foreach($this->annotations as $class => $instances) {
+				if(!$restriction || $restriction == $class) {
+					$result = array_merge($result, $instances);
+				}
+			}
+			return $result;
 		}
 		
 		public function getConstructor() {
@@ -170,11 +190,25 @@
 		}
 		
 		public function getAnnotation($annotation) {
-			return ($this->hasAnnotation($annotation)) ? $this->annotations[$annotation] : false;
+			return ($this->hasAnnotation($annotation)) ? end($this->annotations[$annotation]) : false;
 		}
 		
 		public function getAnnotations() {
-			return array_values($this->annotations);
+			$result = array();
+			foreach($this->annotations as $instances) {
+				$result[] = end($instances);
+			}
+			return $result;
+		}
+		
+		public function getAllAnnotations($restriction = false) {
+			$result = array();
+			foreach($this->annotations as $class => $instances) {
+				if(!$restriction || $restriction == $class) {
+					$result = array_merge($result, $instances);
+				}
+			}
+			return $result;
 		}
 		
 		public function getDeclaringClass() {
@@ -200,11 +234,25 @@
 		}
 		
 		public function getAnnotation($annotation) {
-			return ($this->hasAnnotation($annotation)) ? $this->annotations[$annotation] : false;
+			return ($this->hasAnnotation($annotation)) ? end($this->annotations[$annotation]) : false;
 		}
 		
 		public function getAnnotations() {
-			return array_values($this->annotations);
+			$result = array();
+			foreach($this->annotations as $instances) {
+				$result[] = end($instances);
+			}
+			return $result;
+		}
+		
+		public function getAllAnnotations($restriction = false) {
+			$result = array();
+			foreach($this->annotations as $class => $instances) {
+				if(!$restriction || $restriction == $class) {
+					$result = array_merge($result, $instances);
+				}
+			}
+			return $result;
 		}
 		
 		public function getDeclaringClass() {
@@ -217,9 +265,10 @@
 		}
 	}
 	
-	class AddendumCompatibility {
+	class Addendum {
 		private static $rawMode;
-	
+		private static $ignore;
+		
 		public static function getDocComment($reflection) {
 			if(self::checkRawDocCommentParsingNeeded()) {
 				$docComment = new DocComment();
@@ -244,6 +293,20 @@
 				require_once(dirname(__FILE__).'/annotations/doc_comment.php');
 			}
 			self::$rawMode = $enabled;
+		}
+		
+		public static function resetIgnoredAnnotations() {
+			self::$ignore = array();
+		}
+		
+		public static function ignores($class) {
+			return isset(self::$ignore[$class]);
+		}
+		
+		public static function ignore() {
+			foreach(func_get_args() as $class) {
+				self::$ignore[$class] = true;
+			}
 		}
 	}
 ?>

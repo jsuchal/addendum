@@ -2,7 +2,6 @@
 	require_once('simpletest/autorun.php');
 	require_once(dirname(__FILE__).'/../../annotations.php');
 	
-	
 	interface DummyInterface {}
 	
 	class ParentExample {}
@@ -23,6 +22,15 @@
 		private function justPrivate() {}
 	}
 	
+	/** @FirstAnnotation(1) @FirstAnnotation(2) @SecondAnnotation(3) */
+	class MultiExample {
+		/** @FirstAnnotation(1) @FirstAnnotation(2) @SecondAnnotation(3) */
+		public $property;
+		
+		/** @FirstAnnotation(1) @FirstAnnotation(2) @SecondAnnotation(3) */
+		public function aMethod() {}
+	}
+	
 	class FirstAnnotation extends Annotation {}
 	class SecondAnnotation extends Annotation {}
 	
@@ -34,6 +42,7 @@
 			$this->assertFalse($reflection->hasAnnotation('NonExistentAnnotation'));
 			$this->assertIsA($reflection->getAnnotation('FirstAnnotation'), 'FirstAnnotation');
 			$this->assertIsA($reflection->getAnnotation('SecondAnnotation'), 'SecondAnnotation');
+			
 			$annotations = $reflection->getAnnotations();
 			$this->assertEqual(count($annotations), 2);
 			$this->assertIsA($annotations[0], 'FirstAnnotation');
@@ -56,8 +65,6 @@
 			}
 			
 			$this->assertIsA($reflection->getParentClass(), 'ReflectionAnnotatedClass');
-			
-			
 		}
 		
 		public function testReflectionAnnotatedMethod() {
@@ -100,6 +107,93 @@
 			$privateProperties = $reflection->getProperties(ReflectionProperty::IS_PUBLIC);
 			$this->assertEqual(count($privateProperties), 1);
 			$this->assertEqual($privateProperties[0]->getName(), 'publicOne');
+		}
+		
+		public function testMultipleAnnotationsOnClass() {
+			$reflection = new ReflectionAnnotatedClass('MultiExample');
+			$annotations = $reflection->getAllAnnotations();
+			$this->assertEqual(count($annotations), 3);
+			$this->assertEqual($annotations[0]->value, 1);
+			$this->assertEqual($annotations[1]->value, 2);
+			$this->assertEqual($annotations[2]->value, 3);
+			$this->assertIsA($annotations[0], 'FirstAnnotation');
+			$this->assertIsA($annotations[1], 'FirstAnnotation');
+			$this->assertIsA($annotations[2], 'SecondAnnotation');
+		}
+		
+		public function testMultipleAnnotationsOnClassWithRestriction() {
+			$reflection = new ReflectionAnnotatedClass('MultiExample');
+			$annotations = $reflection->getAllAnnotations('FirstAnnotation');
+			$this->assertEqual(count($annotations), 2);
+			$this->assertEqual($annotations[0]->value, 1);
+			$this->assertEqual($annotations[1]->value, 2);
+			$this->assertIsA($annotations[0], 'FirstAnnotation');
+			$this->assertIsA($annotations[1], 'FirstAnnotation');
+		}
+		
+		public function testMultipleAnnotationsOnProperty() {
+			$reflection = new ReflectionAnnotatedClass('MultiExample');
+			$reflection = $reflection->getProperty('property');
+			$annotations = $reflection->getAllAnnotations();
+			$this->assertEqual(count($annotations), 3);
+			$this->assertEqual($annotations[0]->value, 1);
+			$this->assertEqual($annotations[1]->value, 2);
+			$this->assertEqual($annotations[2]->value, 3);
+			$this->assertIsA($annotations[0], 'FirstAnnotation');
+			$this->assertIsA($annotations[1], 'FirstAnnotation');
+			$this->assertIsA($annotations[2], 'SecondAnnotation');
+		}
+
+		public function testMultipleAnnotationsOnPropertyWithRestriction() {
+			$reflection = new ReflectionAnnotatedClass('MultiExample');
+			$reflection = $reflection->getProperty('property');
+			$annotations = $reflection->getAllAnnotations('FirstAnnotation');
+			$this->assertEqual(count($annotations), 2);
+			$this->assertEqual($annotations[0]->value, 1);
+			$this->assertEqual($annotations[1]->value, 2);
+			$this->assertIsA($annotations[0], 'FirstAnnotation');
+			$this->assertIsA($annotations[1], 'FirstAnnotation');
+		}
+		
+		public function testMultipleAnnotationsOnMethod() {
+			$reflection = new ReflectionAnnotatedClass('MultiExample');
+			$reflection = $reflection->getMethod('aMethod');
+			$annotations = $reflection->getAllAnnotations();
+			$this->assertEqual(count($annotations), 3);
+			$this->assertEqual($annotations[0]->value, 1);
+			$this->assertEqual($annotations[1]->value, 2);
+			$this->assertEqual($annotations[2]->value, 3);
+			$this->assertIsA($annotations[0], 'FirstAnnotation');
+			$this->assertIsA($annotations[1], 'FirstAnnotation');
+			$this->assertIsA($annotations[2], 'SecondAnnotation');
+		}
+
+		public function testMultipleAnnotationsOnMethodWithRestriction() {
+			$reflection = new ReflectionAnnotatedClass('MultiExample');
+			$reflection = $reflection->getMethod('aMethod');
+			$annotations = $reflection->getAllAnnotations('FirstAnnotation');
+			$this->assertEqual(count($annotations), 2);
+			$this->assertEqual($annotations[0]->value, 1);
+			$this->assertEqual($annotations[1]->value, 2);
+			$this->assertIsA($annotations[0], 'FirstAnnotation');
+			$this->assertIsA($annotations[1], 'FirstAnnotation');
+		}
+	}
+	
+	class TestOfSupportingFeatures extends UnitTestCase {
+		public function setUp() {
+			Addendum::resetIgnoredAnnotations();
+		}
+		
+		public function tearDown() {
+			Addendum::resetIgnoredAnnotations();
+		}
+	
+		public function testIgnoredAnnotationsAreNotUsed() {
+			Addendum::ignore('FirstAnnotation', 'SecondAnnotation');
+			$reflection = new ReflectionAnnotatedClass('Example');
+			$this->assertFalse($reflection->hasAnnotation('FirstAnnotation'));
+			$this->assertFalse($reflection->hasAnnotation('SecondAnnotation'));
 		}
 	}
 ?>
