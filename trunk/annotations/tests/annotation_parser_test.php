@@ -1,230 +1,252 @@
 <?php
 	require_once('simpletest/autorun.php');
-	require_once('simpletest/mock_objects.php');
-	
-	require_once(dirname(__FILE__).'/../../annotations.php');
-	
-	class MockAnnotationsParser extends AnnotationsParser {
-		public static $parseCount = 0;
+	require_once(dirname(__FILE__).'/../annotation_parser.php');
+
+	class TestOfMatchers extends UnitTestCase {
+		public function testRegexMatcherShouldMatchPatternAndReturnLengthOfMatch() {
+			$matcher = new RegexMatcher('[0-9]+');
+			$this->assertIdentical($matcher->matches('1234a', $value), 4);
+			$this->assertIdentical($value, '1234');
+		}
 		
-		protected function doParsing($string) {
-			self::$parseCount++;
-			return parent::doParsing($string);
+		public function testRegexMatcherShouldReturnFalseOnNoMatch() {
+			$matcher = new RegexMatcher('[0-9]+');
+			$this->assertFalse($matcher->matches('abc123', $value));
+		}
+		
+		public function testParallelMatcherShouldMatchLongerStringOnColision() {
+			$matcher = new ParallelMatcher;
+			$matcher->add(new RegexMatcher('true'));
+			$matcher->add(new RegexMatcher('.+'));
+			$this->assertEqual($matcher->matches('truestring', $value), 10);
+			$this->assertEqual($value, 'truestring');
+		}
+		
+		public function testSerialMatcherShouldMatchAllParts() {
+			$matcher = new SerialMatcher;
+			$matcher->add(new RegexMatcher('[a-zA-Z0-9_]+'));
+			$matcher->add(new RegexMatcher('='));
+			$matcher->add(new RegexMatcher('[0-9]+'));
+			$this->assertEqual($matcher->matches('key=20', $value), 6);
+			$this->assertEqual($value, 'key=20');
+		}
+		
+		public function testSerialMatcherShouldFailIfAnyPartDoesNotMatch() {
+			$matcher = new SerialMatcher;
+			$matcher->add(new RegexMatcher('[a-zA-Z0-9_]+'));
+			$matcher->add(new RegexMatcher('='));
+			$matcher->add(new RegexMatcher('[0-9]+'));
+			$this->assertFalse($matcher->matches('key=a20', $value));
+			$this->dump($value);
+		}
+		
+		public function testSimpleSerialMatcherShouldReturnRequestedPartOnMatch() {
+			$matcher = new SimpleSerialMatcher(1);
+			$matcher->add(new RegexMatcher('\('));
+			$matcher->add(new RegexMatcher('[0-9]+'));
+			$matcher->add(new RegexMatcher('\)'));
+			$this->assertEqual($matcher->matches('(1234)', $value), 6);
+			$this->assertEqual($value, '1234');
 		}
 	}
 	
-	class TestAnnotation extends Annotation {
-		public $ratio;
-		public $message;
-	}
+	class TestOfAnnotationMatchers extends UnitTestCase {
+		public function testAnnotationsMatcherShouldMatchAnnotationWithGarbage() {
+			$expected = array('Annotation' => array(
+				array('value' => true),
+			));
+			$matcher = new AnnotationsMatcher;
+			$this->assertMatcherResult($matcher, '/** asd bla bla @Annotation(true) */@', $expected);
+		}
+		
+		public function testAnnotationsMatcherShouldNotMatchEmail() {
+			$matcher = new AnnotationsMatcher;
+			$this->assertMatcherResult($matcher, 'johno@example.com', array());
+		}
+		
+		public function testAnnotationsMatcherShouldMatchMultipleAnnotations() {
+			$expected = array('Annotation' => array(
+				array('value' => true),
+				array('value' => false)
+			));
+			$matcher = new AnnotationsMatcher;
+			$this->assertMatcherResult($matcher, ' ss @Annotation(true) @Annotation(false)', $expected);
+		}
+		
+		public function testAnnotationsMatcherShouldMatchMultipleAnnotationsOnManyLines() {
+			$expected = array('Annotation' => array(
+				array('value' => true),
+				array('value' => false)
+			));
+			$block = "/** 
+				@Annotation(true) 
+				@Annotation(false)
+			**/";
+			$matcher = new AnnotationsMatcher;
+			$this->assertMatcherResult($matcher, $block, $expected);
+		}
 	
-	class AnotherAnnotation extends Annotation {
-	}
-	
-	class TestOfAnnotationParser extends UnitTestCase {
-		private function assertAnnotationClass($annotation, $class) {
-			$this->assertEqual($annotation[0], $class);
+		public function testAnnotationMatcherShouldMatchSimpleAnnotation() {
+			$matcher = new AnnotationMatcher;
+			$this->assertNotFalse($matcher->matches('@Namespace_Annotation', $value));
+			$this->assertEqual($value, array('Namespace_Annotation', array()));
 		}
 		
-		private function assertIdenticalAnnotationValue($annotation, $key, $expected) {
-			$this->assertEqual($annotation[1][$key], $expected);
-		}
-	
-		public function testBasicAnnotation() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation');
-			$this->assertAnnotationClass($annotation, 'TestAnnotation');
+		public function testAnnotationMatcherShouldNotMatchAnnotationWithSmallStartingLetter() {
+			$matcher = new AnnotationMatcher;
+			$this->assertFalse($matcher->matches('@annotation', $value));
 		}
 		
-		public function testIntegerValuedAnnotation() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation(2)');
-			$this->assertIdenticalAnnotationValue($annotation, 'value', 2);
+		public function testAnnotationMatcherShouldMatchAlsoBrackets() {
+			$matcher = new AnnotationMatcher;
+			$this->assertEqual($matcher->matches('@Annotation()', $value), 13);
+			$this->assertEqual($value, array('Annotation', array()));
 		}
 		
-		public function testNegativeIntegerValuedAnnotation() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation(-2)');
-			$this->assertIdenticalAnnotationValue($annotation, 'value', -2);
+		public function testAnnotationMatcherShouldMatchValuedAnnotation() {
+			$matcher = new AnnotationMatcher;
+			$this->assertMatcherResult($matcher, '@Annotation(true)', array('Annotation', array('value' => true)));
 		}
 		
-		public function testFloatValuedAnnotation() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation(2.42)');
-			$this->assertIdenticalAnnotationValue($annotation, 'value', 2.42);
+		public function testAnnotationMatcherShouldMatchMultiValuedAnnotation() {
+			$matcher = new AnnotationMatcher;
+			$this->assertMatcherResult($matcher, '@Annotation(key=true, key2=3.14)', array('Annotation', array('key' => true, 'key2' => 3.14)));
 		}
 		
-		public function testStringValuedAnnotation() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation("Hello")');
-			$this->assertIdenticalAnnotationValue($annotation, 'value', "Hello");
+		public function testParametersMatcherShouldMatchEmptyStringAndReturnEmptyArray() {
+			$matcher = new AnnotationParametersMatcher;
+			$this->assertIdentical($matcher->matches('', $value), 0);
+			$this->assertEqual($value, array());
 		}
 		
-		public function testBooleanValuedAnnotation() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation(true)');
-			$this->assertIdenticalAnnotationValue($annotation, 'value', true);
-			$annotation = $parser->parse('@TestAnnotation(false)');
-			$this->assertIdenticalAnnotationValue($annotation, 'value', false);
+		public function testParametersMatcherShouldMatchEmptyBracketsAndReturnEmptyArray() {
+			$matcher = new AnnotationParametersMatcher;
+			$this->assertIdentical($matcher->matches('()', $value), 2);
+			$this->assertEqual($value, array());
 		}
 		
-		public function testStringValuedWithEscapedQuotesAnnotation() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation("He said: \"johno!\"")');
-			$this->assertIdenticalAnnotationValue($annotation, 'value', 'He said: "johno!"');
+		public function testValuesMatcherShouldMatchSimpleValueOrHash() {
+			$matcher = new AnnotationValuesMatcher;
+			$this->assertNotFalse($matcher->matches('true', $value));
+			$this->assertNotFalse($matcher->matches('key=true', $value));
 		}
 		
-		public function testStringValuedSingleQuotedAnnotation() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse("@TestAnnotation('Hello')");
-			$this->assertIdenticalAnnotationValue($annotation, 'value', 'Hello');
+		public function testValueMatcherShouldMatchConstants() {
+			$matcher = new AnnotationValueMatcher;
+			$this->assertMatcherResult($matcher, 'true', true);
+			$this->assertMatcherResult($matcher, 'false', false);
+			$this->assertMatcherResult($matcher, 'TRUE', true);
+			$this->assertMatcherResult($matcher, 'FALSE', false);
 		}
 		
-		public function testStringValuedWithEscapedSingleQuotesAnnotation() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse("@TestAnnotation('He said: \'johno!\'')");
-			$this->assertIdenticalAnnotationValue($annotation, 'value', "He said: 'johno!'");
+		public function testValueMatcherShouldMatchStrings() {
+			$matcher = new AnnotationValueMatcher;
+			$this->assertMatcherResult($matcher, '"string"', 'string');
+			$this->assertMatcherResult($matcher, "'string'", 'string');
 		}
 		
-		public function testSimpleHashedAnnotation() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation(ratio=4.2)');
-			$this->assertIdenticalAnnotationValue($annotation, 'ratio', 4.2);
+		public function testValueMatcherShouldMatchNumbers() {
+			$matcher = new AnnotationValueMatcher;
+			$this->assertMatcherResult($matcher, '-3.14', -3.14);
+			$this->assertMatcherResult($matcher, '100', 100);
 		}
 		
-		public function testSimpleHashedAnnotationWithNegativeValue() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation(ratio=-4.2)');
-			$this->assertIdenticalAnnotationValue($annotation, 'ratio', -4.2);
+		public function testValueMatcherShouldMatchArray() {
+			$matcher = new AnnotationValueMatcher;
+			$this->assertMatcherResult($matcher, '{1}', array(1));
 		}
 		
-		public function testMultiHashedAnnotation() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation(ratio=1,message="Wow!")');
-			$this->assertIdenticalAnnotationValue($annotation, 'ratio', 1);
-			$this->assertIdenticalAnnotationValue($annotation, 'message', "Wow!");
+		public function testArrayMatcherShouldMatchEmptyArray() {
+			$matcher = new AnnotationArrayMatcher;
+			$this->assertMatcherResult($matcher, '{}', array());
 		}
 		
-		public function testMultiHashedAnnotationWithSpace() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation(ratio=1, message="Wow!")');
-			$this->assertIdenticalAnnotationValue($annotation, 'ratio', 1);
-			$this->assertIdenticalAnnotationValue($annotation, 'message', "Wow!");
-		}
-		public function testMultiHashedAnnotationWithSpaces() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation(ratio=1 , message="Wow!")');
-			$this->assertIdenticalAnnotationValue($annotation, 'ratio', 1);
-			$this->assertIdenticalAnnotationValue($annotation, 'message', "Wow!");
+		public function testValueInArrayMatcherReturnsAValueInArray() {
+			$matcher = new AnnotationValueInArrayMatcher;
+			$this->assertMatcherResult($matcher, '1', array(1));
 		}
 		
-		public function testSimpleHashedAnnotationWithSpaces() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation(ratio = 4.2)');
-			$this->assertIdenticalAnnotationValue($annotation, 'ratio', 4.2);
+		public function testArrayMatcherShouldMatchSimpleValueInArray() {
+			$matcher = new AnnotationArrayMatcher;
+			$this->assertMatcherResult($matcher, '{1}', array(1));
 		}
 		
-		public function testHashedAnnotationWithTrue() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation(message = true)');
-			$this->assertIdenticalAnnotationValue($annotation, 'message', true);
+		public function testArrayMatcherShouldMatchSimplePair() {
+			$matcher = new AnnotationArrayMatcher;
+			$this->assertMatcherResult($matcher, '{key=5}', array('key' => 5));
 		}
 		
-		public function testHashedAnnotationWithFalse() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation(message = false)');
-			$this->assertIdenticalAnnotationValue($annotation, 'message', false);
+		public function testArrayMatcherShouldMatchMultiplePairs() {
+			$matcher = new AnnotationArrayMatcher;
+			$this->assertMatcherResult($matcher, '{key=5, "bla"=false}', array('key' => 5, 'bla' => false));
 		}
 		
-		public function testIntegerValuedAnnotationWithSpaces() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation( 2  )');
-			$this->assertIdenticalAnnotationValue($annotation, 'value', 2);
+		public function testArrayMatcherShouldMatchValuesMixedWithPairs() {
+			$matcher = new AnnotationArrayMatcher;
+			$this->assertMatcherResult($matcher, '{key=5, 1, 2, key2="ff"}', array('key' => 5, 1, 2, 'key2' => "ff"));
 		}
 		
-		public function testAnnotationWithNoTrailingBracketThrowsError() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation(2');
-			$this->assertError("Error parsing annotation '@TestAnnotation(2' at position 18");
+		public function testArrayMatcherShouldMatchMoreValuesInArrayWithWhiteSpace() {
+			$matcher = new AnnotationArrayMatcher;
+			$this->assertMatcherResult($matcher, "{1 , 2}", array(1, 2));
 		}
 		
-		public function testAnnotationWithZeroInString() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation(message = "test 203")');
-			$this->assertIdenticalAnnotationValue($annotation, 'message', 'test 203');
+		public function testArrayMatcherShouldMatchNestedArray() {
+			$matcher = new AnnotationArrayMatcher;
+			$this->assertMatcherResult($matcher, "{1 , {2, 3}, 4}", array(1, array(2, 3), 4));
 		}
 		
-		public function testAnnotationWithZeroInNumber() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation(ratio = 0.15)');
-			$this->assertIdenticalAnnotationValue($annotation, 'ratio', 0.15);
+		public function testNumberMatcherShouldMatchInteger() {
+			$matcher = new AnnotationNumberMatcher;
+			$this->assertMatcherResult($matcher, '-314', -314);
 		}
 		
-		public function testAnnotationWithEmptyArray() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation({})');
-			$this->assertIdenticalAnnotationValue($annotation, 'value', array());
+		public function testNumberMatcherShouldMatchFloat() {
+			$matcher = new AnnotationNumberMatcher;
+			$this->assertMatcherResult($matcher, '-3.14', -3.14);
 		}
 		
-		public function testAnnotationWithArray() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation({1, 2, 3})');
-			$this->assertIdenticalAnnotationValue($annotation, 'value', array(1, 2, 3));
+		public function testHashMatcherShouldMatchSimpleHash() {
+			$matcher = new AnnotationHashMatcher;
+			$this->assertMatcherResult($matcher, 'key=true', array('key' => true));
 		}
 		
-		public function testAnnotationWithNestedArray() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation({1, {2, 3}, 4})');
-			$this->assertIdenticalAnnotationValue($annotation, 'value', array(1, array(2, 3), 4));
+		public function testHashMatcherShouldMatchAlsoMultipleKeys() {
+			$matcher = new AnnotationHashMatcher;
+			$this->assertMatcherResult($matcher, 'key=true,key2=false', array('key' => true, 'key2' => false));
 		}
 		
-		public function testHashedAnnotationWithArray() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation(ratio = {1, 2.5})');
-			$this->assertIdenticalAnnotationValue($annotation, 'ratio', array(1, 2.5));
+		public function testHashMatcherShouldMatchAlsoMultipleKeysWithWhiteSpace() {
+			$matcher = new AnnotationHashMatcher;
+			$this->assertMatcherResult($matcher, "key=true\n\t\r ,\n\t\r key2=false", array('key' => true, 'key2' => false));
 		}
 		
-		public function testAnnotationWithHashedArray() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation({key=5})');
-			$this->assertIdenticalAnnotationValue($annotation, 'value', array('key' => 5));
+		public function testKeyMatcherShouldMatchSimpleKeysOrStrings() {
+			$matcher = new AnnotationKeyMatcher;
+			$this->assertNotFalse($matcher->matches('key', $value));
+			$this->assertNotFalse($matcher->matches('"key"', $value));
+			$this->assertNotFalse($matcher->matches("'key'", $value));
 		}
 		
-		public function testAnnotationWithBiggerHashedArray() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation({key=5, key2=4})');
-			$this->assertIdenticalAnnotationValue($annotation, 'value', array('key' => 5, 'key2' => 4));
+		public function testStringMatcherShouldMatchDoubleAndSingleQuotedStringsAndHandleEscapes() {
+			$matcher = new AnnotationStringMatcher;
+			$this->assertMatcherResult($matcher, '"string string"', 'string string');
+			$this->assertMatcherResult($matcher, "'string string'", "string string");
 		}
 		
-		public function TODO_testAnnotationWithMixedArray() {
-			$parser = new AnnotationParser();
-			$annotation = $parser->parse('@TestAnnotation({key=1, 2, key2=3})');
-			$this->dump($annotation[1]['value']);
-			$this->assertIdenticalAnnotationValue($annotation, 'value', array('key' => 1, 2, 'key2' => 3));
+		public function TODO_testStringMatcherShouldMatchEscapedStringsCorrectly() {
+			$matcher = new AnnotationStringMatcher;
+			$this->assertMatcherResult($matcher, '"string\"string"', 'string"string');
+			$this->assertMatcherResult($matcher, "'string\'string'", "string'string");
 		}
 		
-		public function testAnnotationsParser() {
-			$parser = new AnnotationsParser();
-			$block = "
-				/**
-				 * @TestAnnotation(ratio = 2.5)
-				 * @AnotherAnnotation('Hello')
-				 **/";
-			$annotations = $parser->parse($block);
-			$first = $annotations['TestAnnotation'];
-			$second = $annotations['AnotherAnnotation'];
-			$this->assertAnnotationClass($first, 'TestAnnotation');
-			$this->assertIdenticalAnnotationValue($first, 'ratio', 2.5);
-			$this->assertAnnotationClass($second, 'AnotherAnnotation');
-			$this->assertIdenticalAnnotationValue($second, 'value', 'Hello');
+		private function assertNotFalse($value) {
+			$this->assertNotIdentical($value, false);
 		}
 		
-		public function testAnnotationsParserCachesResults() {
-			$parser = new MockAnnotationsParser();
-			$parser->parse('@TestAnnotation');
-			$parser = new MockAnnotationsParser();
-			$parser->parse('@TestAnnotation');
-			$this->assertEqual(MockAnnotationsParser::$parseCount, 1);
+		private function assertMatcherResult($matcher, $string, $expected) {
+			$this->assertNotIdentical($matcher->matches($string, $value), false);
+			$this->assertIdentical($value, $expected);
 		}
 	}
 ?>

@@ -11,20 +11,21 @@
     class AllTests extends GroupTest {
           function __construct($title = false) {
               parent::__construct($title);
-              $path = dirname(__FILE__);
               $this->addTestClass('TestOfAnnotations');
+              $this->addTestClass('TestOfSupportingFeatures');
               $this->addTestClass('TestOfAnnotation');
               $this->addTestClass('TestOfConstrainedAnnotation');
-              $this->addTestClass('TestOfAnnotationParser');
+              $this->addTestClass('TestOfMatchers');
+              $this->addTestClass('TestOfAnnotationMatchers');
               $this->addTestClass('TestOfDocComment');
           }
       }
     
-    AddendumCompatibility::setRawMode(false);
+    Addendum::setRawMode(false);
     $test = new AllTests('All tests in reflection mode');
     $test->run(new HtmlReporter());
     
-    AddendumCompatibility::setRawMode(true);
+    Addendum::setRawMode(true);
     $test = new AllTests('All tests in raw mode');
     $test->run(new HtmlReporter());
 ?>
