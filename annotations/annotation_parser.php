@@ -151,7 +151,7 @@
 			$this->constant = $constant;
 		}
 
-		protected function process() {
+		protected function process($matches) {
 			return $this->constant;
 		}
 	}
