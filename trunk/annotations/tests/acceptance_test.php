@@ -1,5 +1,6 @@
 <?php
 	require_once('simpletest/autorun.php');
+	require_once('simpletest/mock_objects.php');
 	
 	require_once(dirname(__FILE__).'/../../annotations.php');
 	
@@ -181,14 +182,7 @@
 		}
 	}
 	
-	class MockedAnnotationsBuilder extends AnnotationsBuilder {
-		public $callCount = 0;
-		
-		protected function getDocComment() {
-			$this->callCount++;
-			return parent::getDocComment();
-		}
-	}
+	Mock::generatePartial('AnnotationsBuilder', 'MockedAnnotationsBuilder', array('getDocComment'));
 	
 	class TestOfPerformanceFeatures extends UnitTestCase {
 		public function setUp() {
@@ -201,10 +195,10 @@
 	
 		public function testBuilderShouldCacheResults() {
 			$builder = new MockedAnnotationsBuilder;
-			$reflection = new ReflectionAnnotatedClass('Example');
+			$reflection = new ReflectionClass('Example');
 			$builder->build($reflection);
 			$builder->build($reflection);
-			$builder->callCount++;
+			$builder->expectOnce('getDocComment');
 		}
 	}
 	

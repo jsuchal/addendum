@@ -91,10 +91,8 @@
 				$parser = new AnnotationsMatcher;
 				$parser->matches($this->getDocComment($reflection), $data);
 				self::$cache[$key] = $data;
-				return $data;
-			} else {
-				return self::$cache[$key];
 			}
+			return self::$cache[$key];
 		}
 		
 		private function createName($target) {
