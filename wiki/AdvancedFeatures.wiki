@@ -21,7 +21,7 @@ And then access them using
 {{{
 $reflection = new ReflectionAnnotatedClass('WelcomeScreen');
 $annotations = $reflection->getAllAnnotations(); // array of all 4 annotations
-$just_titles = $reflection->getAllAnnotations('Title'); // array those 3 Title annotations
+$just_titles = $reflection->getAllAnnotations('Title'); // array of those 3 Title annotations
 }}}
 
 
