@@ -25,7 +25,7 @@
 	class Annotation {
 		public $value;
 		
-		public function __construct($data, $target) {
+		public final function __construct($data, $target) {
 			$reflection = new ReflectionClass($this);
 			foreach($data as $key => $value) {
 				if($reflection->hasProperty($key)) {
@@ -35,26 +35,24 @@
 					trigger_error("Property '$key' not defined for annotation '$class'");
 				}
 			}
-			$this->checkAllConstraints($target);
+			$this->checkTargetConstraints($target);
+			$this->checkConstraints($target);
 		}
 		
-		final protected function checkAllConstraints($target) {
+		private function checkTargetConstraints($target) {
 			$reflection = new ReflectionAnnotatedClass($this);
 			if($reflection->hasAnnotation('Target')) {
 				$value = $reflection->getAnnotation('Target')->value;
 				$values = is_array($value) ? $value : array($value);
 				foreach($values as $value) {
-					if($value == 'class' && $target instanceof ReflectionClass) return true;
-					if($value == 'method' && $target instanceof ReflectionMethod) return true;
-					if($value == 'property' && $target instanceof ReflectionProperty) return true;
+					if($value == 'class' && $target instanceof ReflectionClass) return;
+					if($value == 'method' && $target instanceof ReflectionMethod) return;
+					if($value == 'property' && $target instanceof ReflectionProperty) return;
 				}
 				trigger_error("Annotation '".get_class($this)."' not allowed on ".$this->createName($target), E_USER_ERROR);
 			}
-			$this->checkConstraints($target);
 		}
-		
-		protected function checkConstraints() {}
-		
+
 		private function createName($target) {
 			if($target instanceof ReflectionMethod) {
 				return $target->getDeclaringClass()->getName().'::'.$target->getName();
@@ -64,14 +62,17 @@
 				return $target->getName();
 			}
 		}
+		
+		protected function checkConstraints($target) {}
 	}
 	
 	class Target extends Annotation {}
 	
 	class AnnotationsBuilder {
+		private static $cache = array();
+		
 		public function build($targetReflection) {
-			$parser = new AnnotationsMatcher;
-			$parser->matches(Addendum::getDocComment($targetReflection), $data);
+			$data = $this->parse($targetReflection);
 			$annotations = array();
 			foreach($data as $class => $parameters) {
 				if(!Addendum::ignores($class)) {
@@ -82,6 +83,36 @@
 				}
 			}
 			return $annotations;
+		}
+		
+		private function parse($reflection) {
+			$key = $this->createName($reflection);
+			if(!isset(self::$cache[$key])) {
+				$parser = new AnnotationsMatcher;
+				$parser->matches($this->getDocComment($reflection), $data);
+				self::$cache[$key] = $data;
+				return $data;
+			} else {
+				return self::$cache[$key];
+			}
+		}
+		
+		private function createName($target) {
+			if($target instanceof ReflectionMethod) {
+				return $target->getDeclaringClass()->getName().'::'.$target->getName();
+			} elseif($target instanceof ReflectionProperty) {
+				return $target->getDeclaringClass()->getName().'::$'.$target->getName();
+			} else {
+				return $target->getName();
+			}
+		}
+		
+		protected function getDocComment($reflection) {
+			return Addendum::getDocComment($reflection);
+		}
+		
+		public static function clearCache() {
+			self::$cache = array();
 		}
 	}
 	

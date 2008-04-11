@@ -1,5 +1,6 @@
 <?php
 	require_once('simpletest/autorun.php');
+	
 	require_once(dirname(__FILE__).'/../../annotations.php');
 	
 	interface DummyInterface {}
@@ -177,6 +178,33 @@
 			$this->assertEqual($annotations[1]->value, 2);
 			$this->assertIsA($annotations[0], 'FirstAnnotation');
 			$this->assertIsA($annotations[1], 'FirstAnnotation');
+		}
+	}
+	
+	class MockedAnnotationsBuilder extends AnnotationsBuilder {
+		public $callCount = 0;
+		
+		protected function getDocComment() {
+			$this->callCount++;
+			return parent::getDocComment();
+		}
+	}
+	
+	class TestOfPerformanceFeatures extends UnitTestCase {
+		public function setUp() {
+			AnnotationsBuilder::clearCache();
+		}
+
+		public function tearDown() {
+			AnnotationsBuilder::clearCache();
+		}
+	
+		public function testBuilderShouldCacheResults() {
+			$builder = new MockedAnnotationsBuilder;
+			$reflection = new ReflectionAnnotatedClass('Example');
+			$builder->build($reflection);
+			$builder->build($reflection);
+			$builder->callCount++;
 		}
 	}
 	

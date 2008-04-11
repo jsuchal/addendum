@@ -12,12 +12,14 @@
           function __construct($title = false) {
               parent::__construct($title);
               $this->addTestClass('TestOfAnnotations');
+              $this->addTestClass('TestOfPerformanceFeatures');
               $this->addTestClass('TestOfSupportingFeatures');
               $this->addTestClass('TestOfAnnotation');
               $this->addTestClass('TestOfConstrainedAnnotation');
               $this->addTestClass('TestOfMatchers');
               $this->addTestClass('TestOfAnnotationMatchers');
               $this->addTestClass('TestOfDocComment');
+              
           }
       }
     
