@@ -37,7 +37,6 @@
 			$matcher->add(new RegexMatcher('='));
 			$matcher->add(new RegexMatcher('[0-9]+'));
 			$this->assertFalse($matcher->matches('key=a20', $value));
-			$this->dump($value);
 		}
 		
 		public function testSimpleSerialMatcherShouldReturnRequestedPartOnMatch() {
