@@ -111,6 +111,18 @@
 			$this->assertEqual($privateProperties[0]->getName(), 'publicOne');
 		}
 		
+		public function testReflectionClassShouldReturnAllMethodsWithNoFilter() {
+			$reflection = new ReflectionAnnotatedClass('Example');
+			$methods = $reflection->getMethods();
+			$this->assertEqual(count($methods), 3);
+		}
+		
+		public function testReflectionClassShouldReturnAllPropertiesWithNoFilter() {
+			$reflection = new ReflectionAnnotatedClass('Example');
+			$properties = $reflection->getProperties();
+			$this->assertEqual(count($properties), 2);
+		}
+		
 		public function testMultipleAnnotationsOnClass() {
 			$reflection = new ReflectionAnnotatedClass('MultiExample');
 			$annotations = $reflection->getAllAnnotations();
