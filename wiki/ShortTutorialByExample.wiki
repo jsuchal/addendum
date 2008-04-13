@@ -81,7 +81,7 @@ class Secured extends Annotation {
 Multi valued annotations are used like this:
 
 {{{
-/** @Secured(role = "admin", level = 2); */
+/** @Secured(role = "admin", level = 2) */
 class Administration {
  // some code
 }
@@ -105,7 +105,7 @@ Annotations can even hold arrays of values using `{}` syntax. For example:
 {{{
 class RolesAllowed extends Annotation {}
 
-/** @RolesAllowed({'admin', 'web-editor'}); */
+/** @RolesAllowed({'admin', 'web-editor'}) */
 class CMS {
  // some code
 }
