@@ -161,9 +161,9 @@
 			$this->add(new ConstantMatcher('', array()));
 			$this->add(new ConstantMatcher('\(\)', array()));
 			$params_matcher = new SimpleSerialMatcher(1);
-			$params_matcher->add(new RegexMatcher('\('));
+			$params_matcher->add(new RegexMatcher('\(\s*'));
 			$params_matcher->add(new AnnotationValuesMatcher);
-			$params_matcher->add(new RegexMatcher('\)'));
+			$params_matcher->add(new RegexMatcher('\s*\)'));
 			$this->add($params_matcher);
 		}
 	}
@@ -195,15 +195,16 @@
 
 	class AnnotationKeyMatcher extends ParallelMatcher {
 		protected function build() {
-			$this->add(new RegexMatcher('[a-zA-Z0-9_]+'));
+			$this->add(new RegexMatcher('[a-zA-Z][a-zA-Z0-9_]*'));
 			$this->add(new AnnotationStringMatcher);
+			$this->add(new AnnotationIntegerMatcher);
 		}
 	}
 
 	class AnnotationPairMatcher extends SerialMatcher {
 		protected function build() {
 			$this->add(new AnnotationKeyMatcher);
-			$this->add(new RegexMatcher('='));
+			$this->add(new RegexMatcher('\s*=\s*'));
 			$this->add(new AnnotationValueMatcher);
 		}
 
@@ -240,9 +241,9 @@
 		protected function build() {
 			$this->add(new ConstantMatcher('{}', array()));
 			$values_matcher = new SimpleSerialMatcher(1);
-			$values_matcher->add(new RegexMatcher('{'));
+			$values_matcher->add(new RegexMatcher('\s*{\s*'));
 			$values_matcher->add(new AnnotationArrayValuesMatcher);
-			$values_matcher->add(new RegexMatcher('}'));
+			$values_matcher->add(new RegexMatcher('\s*}\s*'));
 			$this->add($values_matcher);
 		}
 	}
@@ -299,6 +300,16 @@
 		protected function process($matches) {
 			$isFloat = strpos($matches[0], '.') !== false;
 			return $isFloat ? (float) $matches[0] : (int) $matches[0];
+		}
+	}
+	
+	class AnnotationIntegerMatcher extends RegexMatcher {
+		public function __construct() {
+			parent::__construct("-?[0-9]*");
+		}
+
+		protected function process($matches) {
+			return (int) $matches[0];
 		}
 	}
 

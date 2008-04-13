@@ -84,6 +84,28 @@
 			$matcher = new AnnotationsMatcher;
 			$this->assertMatcherResult($matcher, $block, $expected);
 		}
+		
+		public function testAnnotationMatcherShouldMatchMultilineAnnotations() {
+			$block= '/**
+ 				* @Annotation(
+		   			paramOne="value1",
+		   			paramTwo={
+		 			"value2" ,
+						{"one", "two"}
+		   			},
+		   			paramThree="three"
+				)
+ 			*/';
+			$expected = array('Annotation' => array(
+				array(
+					'paramOne' => 'value1',
+					'paramTwo' => array('value2', array('one', 'two')),
+					'paramThree' => 'three',
+				)
+			));
+ 			$matcher = new AnnotationsMatcher;
+			$this->assertMatcherResult($matcher, $block, $expected);
+		}
 	
 		public function testAnnotationMatcherShouldMatchSimpleAnnotation() {
 			$matcher = new AnnotationMatcher;
@@ -122,6 +144,15 @@
 			$matcher = new AnnotationParametersMatcher;
 			$this->assertIdentical($matcher->matches('()', $value), 2);
 			$this->assertEqual($value, array());
+		}
+		
+		public function testParametersMatcherShouldMatchMultilinedParameters() {
+			$matcher = new AnnotationParametersMatcher;
+			$block = "(
+				key = true,
+				key2 = false
+			)";
+			$this->assertMatcherResult($matcher, $block, array('key' => true, 'key2' => false));
 		}
 		
 		public function testValuesMatcherShouldMatchSimpleValueOrHash() {
@@ -175,6 +206,11 @@
 			$this->assertMatcherResult($matcher, '{key=5}', array('key' => 5));
 		}
 		
+		public function TODO_testArrayMatcherShouldMatchPairWithNumericKeys() {
+			$matcher = new AnnotationArrayMatcher;
+			$this->assertMatcherResult($matcher, '{1="one", 2="two"}', array(1 => 'one', 2 => 'two'));
+		}
+		
 		public function testArrayMatcherShouldMatchMultiplePairs() {
 			$matcher = new AnnotationArrayMatcher;
 			$this->assertMatcherResult($matcher, '{key=5, "bla"=false}', array('key' => 5, 'bla' => false));
@@ -193,6 +229,16 @@
 		public function testArrayMatcherShouldMatchNestedArray() {
 			$matcher = new AnnotationArrayMatcher;
 			$this->assertMatcherResult($matcher, "{1 , {2, 3}, 4}", array(1, array(2, 3), 4));
+		}
+		
+		public function testArrayMatcherShouldMatchWithMoreWhiteSpace() {
+			$matcher = new AnnotationArrayMatcher;
+			$this->assertMatcherResult($matcher, "{ 1 , 2 , 3 }", array(1, 2, 3));
+		}
+		
+		public function testArrayMatcherShouldMatchWithMultilineWhiteSpace() {
+			$matcher = new AnnotationArrayMatcher;
+			$this->assertMatcherResult($matcher, "\n{1, 2, 3\n}", array(1, 2, 3));
 		}
 		
 		public function testNumberMatcherShouldMatchInteger() {
@@ -220,11 +266,26 @@
 			$this->assertMatcherResult($matcher, "key=true\n\t\r ,\n\t\r key2=false", array('key' => true, 'key2' => false));
 		}
 		
+		public function testPairMatcherShouldMatchNumericKey() {
+			$matcher = new AnnotationPairMatcher;
+			$this->assertMatcherResult($matcher, '2 = true', array(2 => true));
+		}
+		
+		public function testPairMatcherShouldMatchAlsoWhitespace() {
+			$matcher = new AnnotationPairMatcher;
+			$this->assertMatcherResult($matcher, 'key = true', array('key' => true));
+		}
+		
 		public function testKeyMatcherShouldMatchSimpleKeysOrStrings() {
 			$matcher = new AnnotationKeyMatcher;
 			$this->assertNotFalse($matcher->matches('key', $value));
 			$this->assertNotFalse($matcher->matches('"key"', $value));
 			$this->assertNotFalse($matcher->matches("'key'", $value));
+		}
+		
+		public function testKeyMatcherShouldMatchIntegerKeys() {
+			$matcher = new AnnotationKeyMatcher;
+			$this->assertMatcherResult($matcher, '123', 123);
 		}
 		
 		public function testStringMatcherShouldMatchDoubleAndSingleQuotedStringsAndHandleEscapes() {

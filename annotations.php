@@ -156,7 +156,7 @@
 			return $this->createReflectionAnnotatedMethod(parent::getMethod($name));
 		}
 		
-		public function getMethods($filter = null) {
+		public function getMethods($filter = -1) {
 			$result = array();
 			foreach(parent::getMethods($filter) as $method) {
 				$result[] = $this->createReflectionAnnotatedMethod($method);
@@ -168,7 +168,7 @@
 			return $this->createReflectionAnnotatedProperty(parent::getProperty($name));
 		}
 		
-		public function getProperties($filter = null) {
+		public function getProperties($filter = -1) {
 			$result = array();
 			foreach(parent::getProperties($filter) as $property) {
 				$result[] = $this->createReflectionAnnotatedProperty($property);
@@ -310,7 +310,7 @@
 		/** Raw mode test */
 		private static function checkRawDocCommentParsingNeeded() {
 			if(self::$rawMode === null) {
-				$reflection = new ReflectionClass('AddendumCompatibility');
+				$reflection = new ReflectionClass('Addendum');
 				$method = $reflection->getMethod('checkRawDocCommentParsingNeeded');
 				self::setRawMode($method->getDocComment() === false);
 			}
