@@ -10,6 +10,7 @@ need to do is:
 class Persistent extends Annotation {}
 }}}
 
+_NOTE: Make sure that annotation class name starts with an uppercase letter._
 
 == Annotating a class ==
 With this defined annotation, you can annotate a different class/method/property with it.
