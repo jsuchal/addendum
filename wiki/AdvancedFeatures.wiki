@@ -38,6 +38,8 @@ For example you might want a `@Route` annotation that can be only used to annota
 class Route extends Annotation {}
 }}}
 
+Besides `"method"` target definition you can also use `"class"` and `"property"`.
+
 
 === Implementing custom constraints ===
 
