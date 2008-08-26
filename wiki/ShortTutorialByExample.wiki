@@ -64,7 +64,7 @@ This value can be then accessed through reflection API
 
 {{{
 $reflection = new ReflectionAnnotatedClass('Person'); // by class name
-$reflection->getAnnnotation('Table')->value; // contains string "people"
+$reflection->getAnnotation('Table')->value; // contains string "people"
 }}}
 
 == Multi valued annotation ==
