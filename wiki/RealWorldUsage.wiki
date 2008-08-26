@@ -1,0 +1,5 @@
+#summary Who uses Addendum and how.
+
+= _Real world_ usage examples =
+
+_NOTE: Feel free to add examples from your project to comments._
