@@ -7,6 +7,11 @@ Maps AMF requests (using annotations) from Flex client frontends and makes the d
 
 http://www.symfony-project.org/plugins/sfAmfPlugin/1_0_0?tab=plugin_readme
 
+== Type inference for APDT ==
+The Aspect PHP Development Tools (APDT) project provides Eclipse platform based tool support for AOSD (aspect-oriented software development) with PHPAspect. 
+
+http://wiki.eclipse.org/Type_inference_for_APDT#APDT_PHP_Runtime_support
+
 
 
 _NOTE: Feel free to add examples from your project to comments._
