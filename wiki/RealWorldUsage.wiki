@@ -2,9 +2,10 @@
 
 = _Real world_ usage examples =
 
-== [http://www.symfony-project.org/plugins/sfAmfPlugin/1_0_0?tab=plugin_readme sfAmfPlugin] ==
+== sfAmfPlugin ==
 Maps AMF requests (using annotations) from Flex client frontends and makes the development of Flex-Applications with Symfony framework easier.
 
+http://www.symfony-project.org/plugins/sfAmfPlugin/1_0_0?tab=plugin_readme
 
 
 
