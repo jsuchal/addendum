@@ -12,6 +12,11 @@ The Aspect PHP Development Tools (APDT) project provides Eclipse platform based 
 
 http://wiki.eclipse.org/Type_inference_for_APDT#APDT_PHP_Runtime_support
 
+==Mosquito PHP5 Persistence API==
+
+Mosquito PHP5 Persistence API is, as its name suggests, a persistence API written in PHP5. It is a lightweight wrapper on top of PDO and its main role is to automate the basic CRUDL operations with a minimum amount of input from the developer by making use of reflection, annotations and database metadata. The current version of Mosquito works with Oracle 10g and MySQL 5.
+
+http://code.google.com/p/mosquito-php5-persistence-api/
 
 
 _NOTE: Feel free to add examples from your project to comments._
