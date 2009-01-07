@@ -35,6 +35,12 @@
 	
 	class FirstAnnotation extends Annotation {}
 	class SecondAnnotation extends Annotation {}
+
+	class NoAnnotation {}
+
+	/** @NoAnnotation @FirstAnnotation */
+	class ExampleWithInvalidAnnotation {}
+
 	
 	class TestOfAnnotations extends UnitTestCase {
 		public function testReflectionAnnotatedClass() {
@@ -191,6 +197,13 @@
 			$this->assertEqual($annotations[1]->value, 2);
 			$this->assertIsA($annotations[0], 'FirstAnnotation');
 			$this->assertIsA($annotations[1], 'FirstAnnotation');
+		}
+
+		public function testClassWithNoAnnotationParentShouldNotBeParsed() {
+			$reflection = new ReflectionAnnotatedClass('ExampleWithInvalidAnnotation');
+			$annotations = $reflection = $reflection->getAnnotations();
+			$this->assertEqual(count($annotations), 1);
+			$this->assertIsA($annotations[0], 'FirstAnnotation');
 		}
 	}
 	
