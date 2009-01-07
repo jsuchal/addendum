@@ -22,12 +22,13 @@
               
           }
       }
-    
+    $reporter = TextReporter::inCli() ? new TextReporter() : new HtmlReporter();
+
     Addendum::setRawMode(false);
     $test = new AllTests('All tests in reflection mode');
-    $test->run(new HtmlReporter());
+    $test->run($reporter);
     
     Addendum::setRawMode(true);
     $test = new AllTests('All tests in raw mode');
-    $test->run(new HtmlReporter());
+    $test->run($reporter);
 ?>
