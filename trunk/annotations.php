@@ -75,7 +75,7 @@
 			$data = $this->parse($targetReflection);
 			$annotations = array();
 			foreach($data as $class => $parameters) {
-				if(!Addendum::ignores($class)) {
+				if(is_subclass_of($class, 'Annotation') && !Addendum::ignores($class)) {
 					foreach($parameters as $params) {
 						$annotationReflection = new ReflectionClass($class);
 						$annotations[$class][] = $annotationReflection->newInstance($params, $targetReflection);
