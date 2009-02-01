@@ -41,6 +41,15 @@
 	/** @NoAnnotation @FirstAnnotation */
 	class ExampleWithInvalidAnnotation {}
 
+	/** @SelfReferencingAnnotation */
+	class SelfReferencingAnnotation extends Annotation {}
+
+	/** @IndirectReferenceLoopAnnotationHelper */
+	class IndirectReferenceLoopAnnotation extends Annotation {}
+
+	/** @IndirectReferenceLoopAnnotation */
+	class IndirectReferenceLoopAnnotationHelper extends Annotation {}
+
 	
 	class TestOfAnnotations extends UnitTestCase {
 		public function testReflectionAnnotatedClass() {
@@ -204,6 +213,16 @@
 			$annotations = $reflection = $reflection->getAnnotations();
 			$this->assertEqual(count($annotations), 1);
 			$this->assertIsA($annotations[0], 'FirstAnnotation');
+		}
+
+		public function testCircularReferenceShouldThrowError() {
+			$reflection = new ReflectionAnnotatedClass('SelfReferencingAnnotation');
+			$reflection->getAnnotations();
+			$this->assertError("Circular annotation reference on 'SelfReferencingAnnotation'");
+
+			$reflection = new ReflectionAnnotatedClass('IndirectReferenceLoopAnnotation');
+			$reflection->getAnnotations();
+			$this->assertError("Circular annotation reference on 'IndirectReferenceLoopAnnotationHelper'");
 		}
 	}
 	
