@@ -24,19 +24,26 @@
 	
 	class Annotation {
 		public $value;
+		private static $creationStack = array();
 		
 		public final function __construct($data, $target) {
 			$reflection = new ReflectionClass($this);
+			$class = $reflection->getName();
+			if(isset(self::$creationStack[$class])) {
+				trigger_error("Circular annotation reference on '$class'", E_USER_ERROR);
+				return;
+			}
+			self::$creationStack[$class] = true;
 			foreach($data as $key => $value) {
 				if($reflection->hasProperty($key)) {
 					$this->$key = $value;
 				} else {
-					$class = $reflection->getName();
 					trigger_error("Property '$key' not defined for annotation '$class'");
 				}
 			}
 			$this->checkTargetConstraints($target);
 			$this->checkConstraints($target);
+			unset(self::$creationStack[$class]);
 		}
 		
 		private function checkTargetConstraints($target) {
