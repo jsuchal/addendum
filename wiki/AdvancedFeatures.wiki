@@ -43,7 +43,7 @@ Besides `"method"` target definition you can also use `"class"` and `"property"`
 
 === Implementing custom constraints ===
 
-Sometimes `@Target` meta-annotation does not provide enough power to check for additional constraints. You can override Annotation::checkConstraints method to add additional rules for validation, etc.
+Sometimes `@Target` meta-annotation does not provide enough power to check for additional constraints. You can override `Annotation::checkConstraints` method to add additional rules for validation, etc.
 
 {{{
 class Route extends Annotation {
