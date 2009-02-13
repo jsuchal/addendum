@@ -50,6 +50,17 @@
 	/** @IndirectReferenceLoopAnnotation */
 	class IndirectReferenceLoopAnnotationHelper extends Annotation {}
 
+
+	class Statics {
+		const A_CONSTANT = 'constant';
+		static public $static = 'static';
+	}
+
+	/** @FirstAnnotation(Statics::A_CONSTANT) */
+	class ClassAnnotatedWithStaticConstant {}
+
+	/** @FirstAnnotation(Statics::UNKNOWN_CONSTANT) */
+	class ClassAnnotatedWithNonExistingConstant {}
 	
 	class TestOfAnnotations extends UnitTestCase {
 		public function testReflectionAnnotatedClass() {
@@ -224,6 +235,19 @@
 			$reflection->getAnnotations();
 			$this->assertError("Circular annotation reference on 'IndirectReferenceLoopAnnotationHelper'");
 		}
+
+		public function testConstInAnnotationShouldReturnCorrectValue() {
+			$reflection = new ReflectionAnnotatedClass('ClassAnnotatedWithStaticConstant');
+			$annotation = $reflection->getAnnotation('FirstAnnotation');
+			$this->assertEqual($annotation->value, Statics::A_CONSTANT);
+		}
+
+		public function testBadConstInAnnotationShouldCauseError() {
+			$reflection = new ReflectionAnnotatedClass('ClassAnnotatedWithNonExistingConstant');
+			$annotation = $reflection->getAnnotation('FirstAnnotation');
+			$this->assertError("Constant 'Statics::UNKNOWN_CONSTANT' used in annotation was not defined.");
+		}
+
 	}
 	
 	Mock::generatePartial('AnnotationsBuilder', 'MockedAnnotationsBuilder', array('getDocComment'));
