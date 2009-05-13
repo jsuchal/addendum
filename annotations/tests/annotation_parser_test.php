@@ -316,9 +316,9 @@
 		}
 
 		public function testStaticConstantMatcherShouldThrowErrorOnBadConstant() {
+			$this->expectError("Constant 'StaticClass::NO_CONSTANT' used in annotation was not defined.");
 			$matcher = new AnnotationStaticConstantMatcher;
 			$matcher->matches('StaticClass::NO_CONSTANT', $value);
-			$this->assertError("Constant 'StaticClass::NO_CONSTANT' used in annotation was not defined.");
 		}
 
 		
