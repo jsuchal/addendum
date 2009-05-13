@@ -227,13 +227,13 @@
 		}
 
 		public function testCircularReferenceShouldThrowError() {
+			$this->expectError("Circular annotation reference on 'SelfReferencingAnnotation'");
 			$reflection = new ReflectionAnnotatedClass('SelfReferencingAnnotation');
 			$reflection->getAnnotations();
-			$this->assertError("Circular annotation reference on 'SelfReferencingAnnotation'");
 
+			$this->expectError("Circular annotation reference on 'IndirectReferenceLoopAnnotationHelper'");
 			$reflection = new ReflectionAnnotatedClass('IndirectReferenceLoopAnnotation');
 			$reflection->getAnnotations();
-			$this->assertError("Circular annotation reference on 'IndirectReferenceLoopAnnotationHelper'");
 		}
 
 		public function testConstInAnnotationShouldReturnCorrectValue() {
@@ -243,9 +243,9 @@
 		}
 
 		public function testBadConstInAnnotationShouldCauseError() {
+			$this->expectError("Constant 'Statics::UNKNOWN_CONSTANT' used in annotation was not defined.");
 			$reflection = new ReflectionAnnotatedClass('ClassAnnotatedWithNonExistingConstant');
 			$annotation = $reflection->getAnnotation('FirstAnnotation');
-			$this->assertError("Constant 'Statics::UNKNOWN_CONSTANT' used in annotation was not defined.");
 		}
 
 	}
