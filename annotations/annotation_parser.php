@@ -3,7 +3,7 @@
 	 * Addendum PHP Reflection Annotations
 	 * http://code.google.com/p/addendum/
 	 *
-	 * Copyright (C) 2006 Jan "johno Suchal <johno@jsmf.net>
+	 * Copyright (C) 2006-2009 Jan "johno Suchal <johno@jsmf.net>
 	
 	 * This library is free software; you can redistribute it and/or
 	 * modify it under the terms of the GNU Lesser General Public
@@ -191,6 +191,7 @@
 			$this->add(new AnnotationNumberMatcher);
 			$this->add(new AnnotationArrayMatcher);
 			$this->add(new AnnotationStaticConstantMatcher);
+			$this->add(new NestedAnnotationMatcher);
 		}
 	}
 
@@ -348,4 +349,11 @@
 			return constant($name);
 		}		
 	}
+
+	class NestedAnnotationMatcher extends AnnotationMatcher {
+		protected function process($result) {
+			$builder = new AnnotationsBuilder;
+			return $builder->instantiateAnnotation($result[1], $result[2]);
+		}
+	}	
 ?>

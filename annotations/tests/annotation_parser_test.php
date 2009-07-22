@@ -1,6 +1,6 @@
 <?php
 	require_once('simpletest/autorun.php');
-	require_once(dirname(__FILE__).'/../annotation_parser.php');
+	require_once(dirname(__FILE__).'/../../annotations.php');
 
 	class TestOfMatchers extends UnitTestCase {
 		public function testRegexMatcherShouldMatchPatternAndReturnLengthOfMatch() {
@@ -195,6 +195,13 @@
 			$matcher = new AnnotationValueMatcher;
 			$this->assertMatcherResult($matcher, 'StaticClass::A_CONSTANT', StaticClass::A_CONSTANT);
 		}
+
+		public function testValueMatcherShouldMatchAnnotation() {
+			$matcher = new AnnotationValueMatcher;
+			$this->assertNotIdentical($matcher->matches('@Annotation(true))', $value), false);
+			$this->assertIsA($value, 'Annotation');
+			$this->assertTrue($value->value);
+		}
 		
 		public function testArrayMatcherShouldMatchEmptyArray() {
 			$matcher = new AnnotationArrayMatcher;
@@ -319,6 +326,13 @@
 			$this->expectError("Constant 'StaticClass::NO_CONSTANT' used in annotation was not defined.");
 			$matcher = new AnnotationStaticConstantMatcher;
 			$matcher->matches('StaticClass::NO_CONSTANT', $value);
+		}
+
+		public function testNestedAnnotationMatcherShouldMatchAnnotation() {
+			$matcher = new AnnotationValueMatcher;
+			$this->assertNotIdentical($matcher->matches('@Annotation(true))', $value), false);
+			$this->assertIsA($value, 'Annotation');
+			$this->assertTrue($value->value);
 		}
 
 		

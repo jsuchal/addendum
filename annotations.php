@@ -3,7 +3,7 @@
 	 * Addendum PHP Reflection Annotations
 	 * http://code.google.com/p/addendum/
 	 *
-	 * Copyright (C) 2006 Jan "johno Suchal <johno@jsmf.net>
+	 * Copyright (C) 2006-2009 Jan "johno Suchal <johno@jsmf.net>
 	
 	 * This library is free software; you can redistribute it and/or
 	 * modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,7 @@
 		public $value;
 		private static $creationStack = array();
 		
-		public final function __construct($data, $target) {
+		public final function __construct($data = array(), $target = false) {
 			$reflection = new ReflectionClass($this);
 			$class = $reflection->getName();
 			if(isset(self::$creationStack[$class])) {
@@ -55,8 +55,13 @@
 					if($value == 'class' && $target instanceof ReflectionClass) return;
 					if($value == 'method' && $target instanceof ReflectionMethod) return;
 					if($value == 'property' && $target instanceof ReflectionProperty) return;
+					if($value == 'nested' && $target === false) return;
 				}
-				trigger_error("Annotation '".get_class($this)."' not allowed on ".$this->createName($target), E_USER_ERROR);
+				if($target === false) {
+					trigger_error("Annotation '".get_class($this)."' nesting not allowed", E_USER_ERROR);
+				} else {
+					trigger_error("Annotation '".get_class($this)."' not allowed on ".$this->createName($target), E_USER_ERROR);
+				}
 			}
 		}
 
@@ -72,8 +77,45 @@
 		
 		protected function checkConstraints($target) {}
 	}
+
+	class AnnotationsCollection {
+		private $annotations;
+
+		public function __construct($annotations) {
+			$this->annotations = $annotations;
+		}
+
+		public function hasAnnotation($class) {
+			$class = Addendum::resolveClassName($class);
+			return isset($this->annotations[$class]);
+		}
+
+		public function getAnnotation($class) {
+			$class = Addendum::resolveClassName($class);
+			return isset($this->annotations[$class]) ? end($this->annotations[$class]) : false;
+		}
+
+		public function getAnnotations() {
+			$result = array();
+			foreach($this->annotations as $instances) {
+				$result[] = end($instances);
+			}
+			return $result;
+		}
+		
+		public function getAllAnnotations($restriction = false) {
+			$restriction = Addendum::resolveClassName($restriction);
+			$result = array();
+			foreach($this->annotations as $class => $instances) {
+				if(!$restriction || $restriction == $class) {
+					$result = array_merge($result, $instances);
+				}
+			}
+			return $result;
+		}
+	}
 	
-	class Target extends Annotation {}
+	class Annotation_Target extends Annotation {}
 	
 	class AnnotationsBuilder {
 		private static $cache = array();
@@ -82,14 +124,23 @@
 			$data = $this->parse($targetReflection);
 			$annotations = array();
 			foreach($data as $class => $parameters) {
-				if(is_subclass_of($class, 'Annotation') && !Addendum::ignores($class)) {
-					foreach($parameters as $params) {
-						$annotationReflection = new ReflectionClass($class);
-						$annotations[$class][] = $annotationReflection->newInstance($params, $targetReflection);
+				foreach($parameters as $params) {
+					$annotation = $this->instantiateAnnotation($class, $params, $targetReflection);
+					if($annotation !== false) {
+						$annotations[get_class($annotation)][] = $annotation;
 					}
 				}
 			}
-			return $annotations;
+			return new AnnotationsCollection($annotations);
+		}
+
+		public function instantiateAnnotation($class, $parameters, $targetReflection = false) {
+			$class = Addendum::resolveClassName($class);
+			if(is_subclass_of($class, 'Annotation') && !Addendum::ignores($class) || $class == 'Annotation') {
+				$annotationReflection = new ReflectionClass($class);
+				return $annotationReflection->newInstance($parameters, $targetReflection);
+			}
+			return false;
 		}
 		
 		private function parse($reflection) {
@@ -129,30 +180,20 @@
 			$this->annotations = $this->createAnnotationBuilder()->build($this);
 		}
 		
-		public function hasAnnotation($annotation) {
-			return isset($this->annotations[$annotation]);
+		public function hasAnnotation($class) {
+			return $this->annotations->hasAnnotation($class);
 		}
 		
 		public function getAnnotation($annotation) {
-			return $this->hasAnnotation($annotation) ? end($this->annotations[$annotation]) : false;
+			return $this->annotations->getAnnotation($annotation);
 		}
 		
 		public function getAnnotations() {
-			$result = array();
-			foreach($this->annotations as $instances) {
-				$result[] = end($instances);
-			}
-			return $result;
+			return $this->annotations->getAnnotations();
 		}
 		
 		public function getAllAnnotations($restriction = false) {
-			$result = array();
-			foreach($this->annotations as $class => $instances) {
-				if(!$restriction || $restriction == $class) {
-					$result = array_merge($result, $instances);
-				}
-			}
-			return $result;
+			return $this->annotations->getAllAnnotations($restriction);
 		}
 		
 		public function getConstructor() {
@@ -221,30 +262,20 @@
 			$this->annotations = $this->createAnnotationBuilder()->build($this);
 		}
 		
-		public function hasAnnotation($annotation) {
-			return isset($this->annotations[$annotation]);
+		public function hasAnnotation($class) {
+			return $this->annotations->hasAnnotation($class);
 		}
 		
 		public function getAnnotation($annotation) {
-			return ($this->hasAnnotation($annotation)) ? end($this->annotations[$annotation]) : false;
+			return $this->annotations->getAnnotation($annotation);
 		}
 		
 		public function getAnnotations() {
-			$result = array();
-			foreach($this->annotations as $instances) {
-				$result[] = end($instances);
-			}
-			return $result;
+			return $this->annotations->getAnnotations();
 		}
 		
 		public function getAllAnnotations($restriction = false) {
-			$result = array();
-			foreach($this->annotations as $class => $instances) {
-				if(!$restriction || $restriction == $class) {
-					$result = array_merge($result, $instances);
-				}
-			}
-			return $result;
+			return $this->annotations->getAllAnnotations($restriction);
 		}
 		
 		public function getDeclaringClass() {
@@ -265,30 +296,20 @@
 			$this->annotations = $this->createAnnotationBuilder()->build($this);
 		}
 		
-		public function hasAnnotation($annotation) {
-			return isset($this->annotations[$annotation]);
+		public function hasAnnotation($class) {
+			return $this->annotations->hasAnnotation($class);
 		}
 		
 		public function getAnnotation($annotation) {
-			return ($this->hasAnnotation($annotation)) ? end($this->annotations[$annotation]) : false;
+			return $this->annotations->getAnnotation($annotation);
 		}
 		
 		public function getAnnotations() {
-			$result = array();
-			foreach($this->annotations as $instances) {
-				$result[] = end($instances);
-			}
-			return $result;
+			return $this->annotations->getAnnotations();
 		}
 		
 		public function getAllAnnotations($restriction = false) {
-			$result = array();
-			foreach($this->annotations as $class => $instances) {
-				if(!$restriction || $restriction == $class) {
-					$result = array_merge($result, $instances);
-				}
-			}
-			return $result;
+			return $this->annotations->getAllAnnotations($restriction);
 		}
 		
 		public function getDeclaringClass() {
@@ -304,6 +325,8 @@
 	class Addendum {
 		private static $rawMode;
 		private static $ignore;
+		private static $classnames = array();
+		private static $annotations = false;
 		
 		public static function getDocComment($reflection) {
 			if(self::checkRawDocCommentParsingNeeded()) {
@@ -344,5 +367,40 @@
 				self::$ignore[$class] = true;
 			}
 		}
+
+		public static function resolveClassName($class) {
+			if(isset(self::$classnames[$class])) return self::$classnames[$class];
+			$matching = array();
+			foreach(self::getDeclaredAnnotations() as $declared) {
+				if($declared == $class) {
+					$matching[] = $declared;
+				} else {
+					$pos = strrpos($declared, "_$class");
+					if($pos !== false && ($pos + strlen($class) == strlen($declared) - 1)) {
+						$matching[] = $declared;
+					}
+				}
+			}
+			$result = null;
+			switch(count($matching)) {
+				case 0: $result = $class; break;
+				case 1: $result = $matching[0]; break;
+				default: trigger_error("Cannot resolve class name for '$class'. Possible matches: " . join(', ', $matching), E_USER_ERROR);
+			}
+			self::$classnames[$class] = $result;
+			return $result;
+		}
+
+		private static function getDeclaredAnnotations() {
+			if(!self::$annotations) {
+				self::$annotations = array();
+				foreach(get_declared_classes() as $class) {
+					if(is_subclass_of($class, 'Annotation') || $class == 'Annotation') self::$annotations[] = $class;
+				}
+			}
+			return self::$annotations;
+		}
+
+		
 	}
 ?>
