@@ -38,7 +38,7 @@ For example you might want a `@Route` annotation that can be only used to annota
 class Route extends Annotation {}
 }}}
 
-Besides `"method"` target definition you can also use `"class"` and `"property"`.
+Besides `"method"` target definition you can also use `"class"`, `"property"` and `"nested"`.
 
 
 === Implementing custom constraints ===
@@ -57,3 +57,42 @@ class Route extends Annotation {
    }
 }
 }}}
+
+== Nested annotations ==
+
+As if it were not enough, even annotations can be nested inside each other. Look at this:
+
+{{{
+/** @Mapping(inheritance = @SingleTableInheritance, columns = {@ColumnMapping('id'), @ColumnMapping('name')}) */
+class Person {}
+
+$reflection = new ReflectionAnnotatedClass('Person');
+$annotation = $reflection->getAnnotation('Mapping');
+$annotation->inheritance; // SingleTableInheritance annotation
+$annotation->columns; // array of ColumnMapping annotations
+$annotation->columns[0]->value; // 'id'
+}}}
+
+If you want to ensure that your `@ColumnMapping` annotation should be only used in nested contexts, add `@Target` meta-annotation with `"nested"`.
+
+{{{
+/** @Target("nested") */
+class ColumnMapping extends Annotation {}
+}}}
+
+== Annotation class name resolving ==
+
+If you use prefixed annotation class names like `MyDoomdayProject_God`. You can save yourself a few keystrokes by using: 
+
+
+{{{
+class MyDoomsdayProject_God extends Annotation {}
+
+/** @God */
+class Me {}
+
+$reflection = new ReflectionAnnotatedClass('Me');
+$reflection->getAnnotation('God'); // returns MyDoomsdayProject_God
+}}}
+
+Did you notice that Addendum automatically resolves `@God` annotation into `@MyDoomsdayProject_God` annotation? And of course you can also use the full class name.
