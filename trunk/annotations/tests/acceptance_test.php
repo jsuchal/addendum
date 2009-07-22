@@ -33,7 +33,10 @@
 		public function aMethod() {}
 	}
 	
-	class FirstAnnotation extends Annotation {}
+	class FirstAnnotation extends Annotation {
+		public $key;
+	}
+
 	class SecondAnnotation extends Annotation {}
 
 	class NoAnnotation {}
@@ -61,6 +64,14 @@
 
 	/** @FirstAnnotation(Statics::UNKNOWN_CONSTANT) */
 	class ClassAnnotatedWithNonExistingConstant {}
+
+	/** @FirstAnnotation(key = @SecondAnnotation(3.14)) */
+	class ClassAnnotatedWithNestedAnnotations {}
+
+	class Namespace_AnnotationWithNamespace extends Annotation {}
+
+	/** @AnnotationWithNamespace */
+	class ClassAnnotatedWithNamespacedAnnotation {}
 	
 	class TestOfAnnotations extends UnitTestCase {
 		public function testReflectionAnnotatedClass() {
@@ -248,6 +259,19 @@
 			$annotation = $reflection->getAnnotation('FirstAnnotation');
 		}
 
+		public function testNestedAnnotationSupport() {
+			$reflection = new ReflectionAnnotatedClass('ClassAnnotatedWithNestedAnnotations');
+			$this->assertEqual(count($reflection->getAnnotations()), 1);
+			$annotation = $reflection->getAnnotation('FirstAnnotation');
+			$this->assertIsA($annotation, 'FirstAnnotation');
+			$this->assertIsA($annotation->key, 'SecondAnnotation');
+			$this->assertEqual($annotation->key->value, 3.14);
+		}
+
+		public function testAnnotationWithoutNamespaceShouldBeRecognized() {
+			$reflection = new ReflectionAnnotatedClass('ClassAnnotatedWithNamespacedAnnotation');
+			$this->assertTrue($reflection->hasAnnotation('AnnotationWithNamespace'));
+		}
 	}
 	
 	Mock::generatePartial('AnnotationsBuilder', 'MockedAnnotationsBuilder', array('getDocComment'));

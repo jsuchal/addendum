@@ -11,6 +11,9 @@
 	/** @Target("property") */
 	class PropertyRestrictedAnnotation extends Annotation {}
 
+	/** @Target("nested") */
+	class NestedRestrictedAnnotation extends Annotation {}
+
 	/** @Target({"class", "property"}) */
 	class ClassOrPropertyRestrictedAnnotation extends Annotation {}
 	
@@ -25,6 +28,9 @@
 		/** @ClassOrPropertyRestrictedAnnotation */
 		public function method2() {}
 	}
+
+	/** @ClassRestrictedAnnotation(value = @MethodRestrictedAnnotation(true)) */
+	class ClassWithBadlyNestedAnnotations {}
 	
 	/** @ClassRestrictedAnnotation */
 	class SuccesfullyAnnotatedClass {
@@ -36,6 +42,9 @@
 
 		/** @MethodRestrictedAnnotation */
 		public function method() {}
+
+		/** @MethodRestrictedAnnotation(value = @NestedRestrictedAnnotation) */
+		public function method2() {}
 	}
 
 	class TestOfConstrainedAnnotation extends UnitTestCase {
@@ -66,6 +75,18 @@
 		public function testMultiTargetAnnotationThrowsNoErrorWhenOnRightPlace() {
 			$reflection = new ReflectionAnnotatedClass('SuccesfullyAnnotatedClass');
 			$method = $reflection->getProperty('property2');
+		}
+
+		public function testBadlyNestedAnnotationThrowsError() {
+			$this->expectError("Annotation 'MethodRestrictedAnnotation' nesting not allowed");
+			$this->expectError("Annotation 'MethodRestrictedAnnotation' nesting not allowed"); // because of parsing
+			$reflection = new ReflectionAnnotatedClass('ClassWithBadlyNestedAnnotations');
+		}
+
+		public function testSuccesfullyNestedAnnotationThrowsNoError() {
+			$reflection = new ReflectionAnnotatedClass('SuccesfullyAnnotatedClass');
+			$reflection->getMethod('method2')->getAnnotation('MethodRestrictedAnnotation');
+			
 		}
 	}
 ?>
