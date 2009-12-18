@@ -172,6 +172,8 @@
 			$this->assertMatcherResult($matcher, 'false', false);
 			$this->assertMatcherResult($matcher, 'TRUE', true);
 			$this->assertMatcherResult($matcher, 'FALSE', false);
+			$this->assertMatcherResult($matcher, 'NULL', null);
+			$this->assertMatcherResult($matcher, 'null', null);
 		}
 		
 		public function testValueMatcherShouldMatchStrings() {
