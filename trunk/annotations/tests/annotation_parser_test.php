@@ -122,6 +122,11 @@
 			$matcher = new AnnotationMatcher;
 			$this->assertFalse($matcher->matches('@annotation', $value));
 		}
+
+		public function testAnnotationMatcherShouldMatchShortAnnotations() {
+			$matcher = new AnnotationMatcher;
+			$this->assertMatcherResult($matcher, '@X', array('X', array()));
+		}
 		
 		public function testAnnotationMatcherShouldMatchAlsoBrackets() {
 			$matcher = new AnnotationMatcher;
