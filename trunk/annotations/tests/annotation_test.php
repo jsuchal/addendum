@@ -42,7 +42,7 @@
 
 		public function setUp() {
 			$this->annotations = new AnnotationsCollection(array(
-				'Annotation1' => array(new Annotation1(array(value => false)), new Annotation1(array(value => true))), 
+				'Annotation1' => array(new Annotation1(array('value' => false)), new Annotation1(array('value' => true))), 
 				'Annotation2' => array(new Annotation2),
 				'Namespace_Annotation3' => array(new Namespace_Annotation3)
 			));
