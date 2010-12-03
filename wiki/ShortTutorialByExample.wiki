@@ -92,7 +92,7 @@ To access these field just use extended reflection API.
 
 {{{
 $reflection = new ReflectionAnnotatedClass('Administration'); // by class name
-$annotation = $reflection->getAnnnotation('Secured');
+$annotation = $reflection->getAnnotation('Secured');
 $annotation->role; // contains string "admin"
 $annotation->level; // contains integer "2"
 }}}
@@ -112,7 +112,7 @@ class CMS {
 }
 
 $reflection = new ReflectionAnnotatedClass('CMS');
-$annotation = $reflection->getAnnnotation('RolesAllowed');
+$annotation = $reflection->getAnnotation('RolesAllowed');
 $annotation->value; // contains array('admin', 'web-editor')
 }}}
 
