@@ -23,6 +23,8 @@ class Person {
 }
 }}}
 
+_NOTE: Please make sure that there are two asterisks at beginning. Doc blocks differ from normal comments._
+
 == Accessing annotations ==
 Annotations of a class are accessed through extended reflection API. A
 reflecting class can be created in two ways:
