@@ -68,6 +68,20 @@
 			$this->assertMatcherResult($matcher, 'johno@example.com', array());
 		}
 		
+		public function testAnnotationsMatcherShouldMatchWhenThereIsNoSpaceBetweenDocBlockMarginAndAt() {
+			$matcher = new AnnotationsMatcher;
+			$expected = array('Annotation'=>array(array('value'=>true)));
+			$block = "/**\n *@Annotation(true)\n*/";
+			$this->assertMatcherResult($matcher, $block, $expected);
+		}
+	
+		public function testAnnotationsMatcherShouldMatchWhenFirstThingOnALine() {
+			$matcher = new AnnotationsMatcher;
+			$expected = array('Annotation'=>array(array('value'=>true)));
+			$block = "/**\n@Annotation(true)\n*/";
+			$this->assertMatcherResult($matcher, $block, $expected);
+		}
+		
 		public function testAnnotationsMatcherShouldMatchMultipleAnnotations() {
 			$expected = array('Annotation' => array(
 				array('value' => true),
