@@ -74,6 +74,7 @@
 							break;
 						
 						case T_CLASS: 
+						case T_INTERFACE:
 							$class = $namespace.$this->getString($tokens, $i, $max);
 							if($comment !== false) {
 								self::$classes[$class] = $comment;

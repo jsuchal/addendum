@@ -27,6 +27,12 @@
 		private $field1;
 	}
 	
+	/** interface doccomment */
+	interface SomeInterface {
+		/** method doccomment */
+		public function method();
+	}
+	
 	class TestOfDocComment extends UnitTestCase {
 		public function setUp() {
 			DocComment::clearCache();
@@ -36,6 +42,19 @@
 			$reflection = new ReflectionClass('SomeClass');
 			$finder = new DocComment();
 			$this->assertEqual($finder->get($reflection), '/** class doccomment */');
+		}
+		
+		public function testFinderFindsInterfaceDocBlock() {
+			$reflection = new ReflectionClass('SomeInterface');
+			$finder = new DocComment();
+			$this->assertEqual($finder->get($reflection), '/** interface doccomment */');
+		}
+		
+		public function testFinderFindsInterfaceMethodDocBlock() {
+			$reflection = new ReflectionClass('SomeInterface');
+			$method = $reflection->getMethod('method');
+			$finder = new DocComment();
+			$this->assertEqual($finder->get($method), '/** method doccomment */');
 		}
 		
 		public function testFinderFindsFieldDocBlock() {
