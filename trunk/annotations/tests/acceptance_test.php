@@ -6,6 +6,9 @@
 	
 	interface DummyInterface {}
 	
+	/** @FirstAnnotation @SecondAnnotation */
+	interface ExampleInterface {}
+	
 	class ParentExample {}
 	
 	/** @FirstAnnotation @SecondAnnotation */
@@ -104,6 +107,12 @@
 			}
 			
 			$this->assertIsA($reflection->getParentClass(), 'ReflectionAnnotatedClass');
+		}
+		
+		public function testReflectionAnnotatedClassInterface() {
+			$reflection = new ReflectionAnnotatedClass('ExampleInterface');
+			$this->assertTrue($reflection->hasAnnotation('FirstAnnotation'));
+			$this->assertTrue($reflection->hasAnnotation('SecondAnnotation'));
 		}
 		
 		public function testReflectionAnnotatedMethod() {
