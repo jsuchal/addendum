@@ -1,4 +1,5 @@
 #summary Who uses Addendum and how.
+#labels Featured
 
 = _Real world_ usage examples =
 
