@@ -2,6 +2,11 @@
 
 = _Real world_ usage examples =
 
+== Doodal ==
+Doodal is an object-oriented wrapper library around Drupal 7's node system. It allows you to interact with Drupal nodes in a more object-oriented way.
+
+https://github.com/rybosome/doodal#right
+
 == sfAmfPlugin ==
 Maps AMF requests (using annotations) from Flex client frontends and makes the development of Flex-Applications with Symfony framework easier.
 
