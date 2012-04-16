@@ -8,6 +8,11 @@ Doodal is an object-oriented wrapper library around Drupal 7's node system. It a
 
 https://github.com/rybosome/doodal#right
 
+== Ovo Container ==
+Ovo Container is a lightweight Dependency Injection / Inversion of control Framework for PHP5. 
+
+http://code.google.com/p/ovo-container/
+
 == sfAmfPlugin ==
 Maps AMF requests (using annotations) from Flex client frontends and makes the development of Flex-Applications with Symfony framework easier.
 
