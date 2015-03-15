@@ -1,6 +1,6 @@
 # Addendum
 
-DocBlock?/JavaDoc? annotations support for PHP5. Supporting single and multi valued annotations accessible through extended Reflection API.
+DocBlock/JavaDoc annotations support for PHP5. Supporting single and multi valued annotations accessible through extended Reflection API.
 
 Example annotations:
 ```php
