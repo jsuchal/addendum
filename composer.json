@@ -1,0 +1,17 @@
+{
+	"name": "jsuchal/addendum",
+	"description": "DocBlock/JavaDoc annotations support for PHP5",
+	"license": "LGPL-2.1",
+	"authors": [
+		{
+			"name": "Jano Suchal"
+		}
+	],
+	"autoload": {
+		"classmap": [ "annotations.php" ]
+	},
+	"require": {
+		"php": ">=5.2.0"
+	}
+}
+
